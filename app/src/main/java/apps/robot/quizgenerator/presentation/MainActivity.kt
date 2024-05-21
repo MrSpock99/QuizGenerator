@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import apps.robot.quizgenerator.ui.theme.QuizGeneratorTheme
 import kotlinx.serialization.Serializable
 import androidx.navigation.compose.composable
+import apps.robot.quizgenerator.createquiz.presentation.CreateOpenQuestion
 import apps.robot.quizgenerator.quizlist.presentation.QuizList
 
 class MainActivity : ComponentActivity() {
@@ -29,6 +30,9 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = QuizListScreen) {
                     composable<QuizListScreen> {
                         QuizList()
+                    }
+                    composable<CreateOpenQuestionScreen> {
+                        CreateOpenQuestion()
                     }
                 }
 
@@ -61,3 +65,6 @@ fun GreetingPreview() {
 
 @Serializable
 object QuizListScreen
+
+@Serializable
+object CreateOpenQuestionScreen
