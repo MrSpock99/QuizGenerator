@@ -22,10 +22,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="apps.robot.quizgenerator" />
+                  <option name="mobileSdkAppId" value="1:966737672003:android:c36c687ace77289d43e1f6" />
+                  <option name="projectId" value="quizgenerator-4084d" />
+                  <option name="projectNumber" value="966737672003" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

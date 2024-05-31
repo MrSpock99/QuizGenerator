@@ -1,7 +1,7 @@
 package apps.robot.quizgenerator.domain
 
-class QuestionWithOptions(title: String, text: String, options: List<Option>, image: String?, voiceover: String?) :
-    QuestionModel(title, text, image, voiceover) {
+class QuestionWithOptions(id: String, title: String, text: String, options: List<Option>, image: String?, voiceover: String?) :
+    QuestionModel(id, title, text, image, voiceover) {
 
     enum class Answer {
         TRUE,

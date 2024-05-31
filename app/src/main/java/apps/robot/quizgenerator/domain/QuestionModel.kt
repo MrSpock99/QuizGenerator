@@ -1,3 +1,3 @@
 package apps.robot.quizgenerator.domain
 
-open class QuestionModel(title: String, text: String, image: String?, voiceover: String?)
+open class QuestionModel(open val id: String, open val title: String, open val text: String, open val image: String?, open val voiceover: String?)

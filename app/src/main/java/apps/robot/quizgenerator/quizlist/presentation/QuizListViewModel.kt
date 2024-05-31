@@ -19,7 +19,7 @@ class QuizListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val list = repository.getQuizList()
 
-            state.emit(QuizListUiState.Success(list))
+            state.emit(QuizListUiState.Success(list as List<QuizModel>))
         }
     }
 

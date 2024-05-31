@@ -1,23 +1,155 @@
 package apps.robot.quizgenerator.data
 
-import android.content.SharedPreferences
-import apps.robot.quizgenerator.domain.QuizRepository
+import apps.robot.quizgenerator.domain.OpenQuestion
 import apps.robot.quizgenerator.domain.QuestionModel
 import apps.robot.quizgenerator.domain.QuizModel
+import apps.robot.quizgenerator.domain.QuizRepository
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.UUID
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class QuizRepositoryImpl(
-    private val preferences: SharedPreferences
+    private val fireStore: FirebaseFirestore
 ) : QuizRepository {
 
-    override fun addQuestion(questionModel: QuestionModel) {
-        //preferences.edit().putString()
+    override suspend fun addQuestion(quizId: String, questionModel: QuestionModel): Boolean {
+        return withContext(Dispatchers.IO) {
+            suspendCoroutine { emitter ->
+                fireStore.collection(QUIZ_DB)
+                    .document(quizId)
+                    .get()
+                    .addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            val quiz = it.result.toObject(QuizModel::class.java)
+                            val oldList = quiz?.list?.toMutableList()
+                            oldList?.add(questionModel)
+                            quiz?.list = oldList?.toList()!!
+
+                            fireStore.collection(QUIZ_DB)
+                                .document(quizId)
+                                .set(quiz)
+                                .addOnCompleteListener {
+                                    emitter.resume(it.isSuccessful)
+                                }
+                        }
+                    }
+            }
+        }
     }
 
-    override fun exportQuiz(): String {
+    override suspend fun exportQuiz(): String {
         return ""
     }
 
-    override fun getQuizList(): List<QuizModel> {
-        return emptyList()
+    override suspend fun getQuizList(): List<QuizModel?> {
+        return withContext(Dispatchers.IO) {
+            suspendCoroutine { emitter ->
+                fireStore.collection(QUIZ_DB)
+                    .get()
+                    .addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            emitter.resume(it.result?.documents?.map {
+                                val quizMap = it.data!!
+                                val list = (it.get("list") as ArrayList<HashMap<String, Any>>).map {
+                                    val question = if (it.get("answer") != null) {
+                                        OpenQuestion(
+                                            id = it["id"].toString(),
+                                            title = it["title"].toString(),
+                                            text = it["text"].toString(),
+                                            answer = it["answer"] as ArrayList<String>,
+                                            voiceover = it["voiceover"].toString(),
+                                            image = it["image"].toString()
+                                        )
+                                    } else {
+                                        null
+                                    }
+                                    question
+                                }
+
+                                val quizModel = QuizModel(
+                                    id = quizMap.get("id").toString(),
+                                    name = quizMap.get("name").toString(),
+                                    list = list
+                                )
+                                quizModel
+                            } ?: listOf())
+                        }
+                    }
+            }
+        }
+    }
+
+    override suspend fun getQuizModel(id: String): QuizModel {
+        return withContext(Dispatchers.IO) {
+            suspendCoroutine { emitter ->
+                fireStore.collection(QUIZ_DB)
+                    .document(id)
+                    .get()
+                    .addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            val quizMap = it.result.data!!
+                            val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
+                                val question = if (it.get("answer") != null) {
+                                    OpenQuestion(
+                                        id = it["id"].toString(),
+                                        title = it["title"].toString(),
+                                        text = it["text"].toString(),
+                                        answer = it["answer"] as ArrayList<String>,
+                                        voiceover = it["voiceover"].toString(),
+                                        image = it["image"].toString()
+                                    )
+                                } else {
+                                    null
+                                }
+                                question
+                            }
+
+                            val quizModel = QuizModel(
+                                id = quizMap.get("id").toString(),
+                                name = quizMap.get("name").toString(),
+                                list = list
+                            )
+                            emitter.resume(quizModel)
+                        }
+                    }
+            }
+        }
+    }
+
+    override suspend fun createQuizModel(): QuizModel {
+        return withContext(Dispatchers.IO) {
+            suspendCoroutine { emitter ->
+                val id = UUID.randomUUID().toString()
+                val quizModel = QuizModel(id, "test", emptyList())
+                fireStore.collection(QUIZ_DB)
+                    .document(id)
+                    .set(quizModel)
+                    .addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            emitter.resume(quizModel)
+                        }
+                    }
+            }
+        }
+    }
+
+    override suspend fun saveQuiz(quizModel: QuizModel) {
+        withContext(Dispatchers.IO) {
+            suspendCoroutine { emitter ->
+                fireStore.collection(QUIZ_DB)
+                    .document(quizModel.id)
+                    .set(quizModel)
+                    .addOnCompleteListener {
+                        emitter.resume(it.isSuccessful)
+                    }
+            }
+        }
+    }
+
+    companion object {
+        private const val QUIZ_DB = "quiz_db"
     }
 }

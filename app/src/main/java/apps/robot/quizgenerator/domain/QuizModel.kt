@@ -1,3 +1,5 @@
 package apps.robot.quizgenerator.domain
 
-data class QuizModel(val id: String, val name: String, val list: List<QuestionModel>)
+data class QuizModel(var id: String, val name: String, var list: List<QuestionModel?>) {
+    constructor(): this("", "", emptyList())
+}

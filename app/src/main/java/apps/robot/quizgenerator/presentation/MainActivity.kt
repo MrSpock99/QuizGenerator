@@ -4,20 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import apps.robot.quizgenerator.createquiz.main.presentation.QuizViewPager
+import apps.robot.quizgenerator.createquiz.openquestion.CreateOpenQuestion
+import apps.robot.quizgenerator.createquiz.questionlist.QuizQuestionList
+import apps.robot.quizgenerator.quizlist.presentation.QuizList
 import apps.robot.quizgenerator.ui.theme.QuizGeneratorTheme
 import kotlinx.serialization.Serializable
-import androidx.navigation.compose.composable
-import apps.robot.quizgenerator.createquiz.presentation.CreateOpenQuestion
-import apps.robot.quizgenerator.quizlist.presentation.QuizList
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,10 +29,19 @@ class MainActivity : ComponentActivity() {
             QuizGeneratorTheme {
                 NavHost(navController = navController, startDestination = QuizListScreen) {
                     composable<QuizListScreen> {
-                        QuizList()
+                        QuizList(navController=navController)
                     }
                     composable<CreateOpenQuestionScreen> {
-                        CreateOpenQuestion()
+                        val args = it.toRoute<CreateOpenQuestionScreen>()
+                        CreateOpenQuestion(args.id)
+                    }
+                    composable<CreateQuizViewPagerScreen> {
+                        val args = it.toRoute<CreateQuizViewPagerScreen>()
+                        QuizViewPager(quizId = args.quizId, navController)
+                    }
+                    composable<QuizQuestionListScreen> {
+                        val args = it.toRoute<QuizQuestionListScreen>()
+                        QuizQuestionList(quizId = args.quizId, navController = navController)
                     }
                 }
 
@@ -67,4 +76,10 @@ fun GreetingPreview() {
 object QuizListScreen
 
 @Serializable
-object CreateOpenQuestionScreen
+data class CreateOpenQuestionScreen(val id: String)
+
+@Serializable
+data class CreateQuizViewPagerScreen(val quizId: String?)
+
+@Serializable
+data class QuizQuestionListScreen(val quizId: String?)
