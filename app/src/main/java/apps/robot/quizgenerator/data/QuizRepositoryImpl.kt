@@ -2,6 +2,7 @@ package apps.robot.quizgenerator.data
 
 import apps.robot.quizgenerator.domain.OpenQuestion
 import apps.robot.quizgenerator.domain.QuestionModel
+import apps.robot.quizgenerator.domain.QuestionWithOptions
 import apps.robot.quizgenerator.domain.QuizModel
 import apps.robot.quizgenerator.domain.QuizRepository
 import com.google.firebase.firestore.FirebaseFirestore
@@ -168,14 +169,20 @@ class QuizRepositoryImpl(
             val question = if (it.get("answer") != null) {
                 OpenQuestion(
                     id = it["id"].toString(),
-                    title = it["title"].toString(),
                     text = it["text"].toString(),
                     answer = it["answer"] as ArrayList<String>,
                     voiceover = it["voiceover"].toString(),
                     image = it["image"].toString()
                 )
             } else {
-                null
+                QuestionWithOptions(
+                    id = it["id"].toString(),
+                    text = it["text"].toString(),
+                    options = it["options"] as ArrayList<String>,
+                    rightAnswerIndex = (it["rightAnswerIndex"] as Long).toInt(),
+                    voiceover = it["voiceover"].toString(),
+                    image = it["image"].toString()
+                )
             }
             question
         }

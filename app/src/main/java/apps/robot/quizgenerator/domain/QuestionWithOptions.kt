@@ -1,7 +1,16 @@
 package apps.robot.quizgenerator.domain
 
-class QuestionWithOptions(id: String, title: String, text: String, options: List<Option>, image: String?, voiceover: String?) :
-    QuestionModel(id, title, text, image, voiceover) {
+data class QuestionWithOptions(
+    override val id: String,
+    override val text: String,
+    val options: List<String>,
+    val rightAnswerIndex: Int,
+    override val image: String?,
+    override val voiceover: String?,
+) :
+    QuestionModel(id, text, image, voiceover) {
+
+    constructor(options:  List<Option>) : this("", "", listOf(),-1, null, null)
 
     enum class Answer {
         TRUE,
@@ -10,5 +19,6 @@ class QuestionWithOptions(id: String, title: String, text: String, options: List
 
     data class Option(
         val text: String,
-        val rightAnswer: Answer = Answer.FALSE
-    )}
+        val type: Answer = Answer.FALSE
+    )
+}

@@ -67,12 +67,6 @@ fun CreateOpenQuestion(
             Column {
                 CustomTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = "Question name",
-                    onChange = { viewModel.onQuestionNameChange(it) },
-                    text = state.questionName
-                )
-                CustomTextField(
-                    modifier = Modifier.fillMaxWidth(),
                     label = "Question text",
                     onChange = { viewModel.onQuestionTextChange(it) },
                     text = state.questionText

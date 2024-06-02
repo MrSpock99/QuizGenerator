@@ -4,6 +4,7 @@ import android.content.Context
 import apps.robot.quizgenerator.createquiz.main.presentation.QuizInfoViewModel
 import apps.robot.quizgenerator.createquiz.openquestion.CreateOpenQuestionViewModel
 import apps.robot.quizgenerator.createquiz.questionlist.QuizQuestionListViewModel
+import apps.robot.quizgenerator.createquiz.questionwithoptions.CreateQuestionWithOptionsViewModel
 import apps.robot.quizgenerator.data.QuizRepositoryImpl
 import apps.robot.quizgenerator.domain.QuizRepository
 import apps.robot.quizgenerator.quizlist.presentation.QuizListViewModel
@@ -30,5 +31,8 @@ fun appModule() = module {
     }
     viewModel {
         CreateOpenQuestionViewModel(repository = get())
+    }
+    viewModel {
+        CreateQuestionWithOptionsViewModel(repository = get())
     }
 }

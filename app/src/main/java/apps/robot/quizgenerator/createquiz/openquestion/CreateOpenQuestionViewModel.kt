@@ -16,7 +16,7 @@ class CreateOpenQuestionViewModel(
     var state: MutableStateFlow<QuestionUiModel> =
         MutableStateFlow(
             QuestionUiModel(
-                quizId = "", questionName = "", questionText = "", answers = emptyList(),
+                quizId = "", questionText = "", answers = emptyList(),
                 currentAnswer = "", isUpdatingQuestion = false
             )
         )
@@ -35,17 +35,12 @@ class CreateOpenQuestionViewModel(
 
             state.value = state.value.copy(
                 quizId = id,
-                questionName = question?.title.orEmpty(),
                 questionText = question?.text.orEmpty(),
                 answers = question?.answer.orEmpty(),
                 isUpdatingQuestion = question != null
             )
         }
 
-    }
-
-    fun onQuestionNameChange(name: String) {
-        state.value = state.value.copy(questionName = name)
     }
 
     fun onQuestionTextChange(text: String) {
@@ -67,7 +62,6 @@ class CreateOpenQuestionViewModel(
             val quizId = state.value.quizId
             if (state.value.isUpdatingQuestion) {
                 val model = questionModel?.copy(
-                    title = state.value.questionName,
                     text = state.value.questionText,
                     answer = state.value.answers
                 )!!
@@ -79,7 +73,6 @@ class CreateOpenQuestionViewModel(
             } else {
                 val model = OpenQuestion(
                     id = UUID.randomUUID().toString(),
-                    title = state.value.questionName,
                     text = state.value.questionText,
                     answer = state.value.answers,
                     image = null,
@@ -102,7 +95,6 @@ class CreateOpenQuestionViewModel(
 
     data class QuestionUiModel(
         val quizId: String,
-        val questionName: String,
         val questionText: String,
         val answers: List<String>,
         val currentAnswer: String,
