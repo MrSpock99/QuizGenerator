@@ -33,11 +33,11 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<CreateOpenQuestionScreen> {
                         val args = it.toRoute<CreateOpenQuestionScreen>()
-                        CreateOpenQuestion(args.id)
+                        CreateOpenQuestion(quizId = args.quizId, questionId = args.questionId, navController = navController)
                     }
                     composable<CreateQuizViewPagerScreen> {
                         val args = it.toRoute<CreateQuizViewPagerScreen>()
-                        QuizViewPager(quizId = args.quizId, navController)
+                        QuizViewPager(quizId = args.quizId, navController =navController)
                     }
                     composable<QuizQuestionListScreen> {
                         val args = it.toRoute<QuizQuestionListScreen>()
@@ -76,7 +76,7 @@ fun GreetingPreview() {
 object QuizListScreen
 
 @Serializable
-data class CreateOpenQuestionScreen(val id: String)
+data class CreateOpenQuestionScreen(val quizId: String, val questionId: String?)
 
 @Serializable
 data class CreateQuizViewPagerScreen(val quizId: String?)

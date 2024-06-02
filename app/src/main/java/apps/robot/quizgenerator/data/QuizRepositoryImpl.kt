@@ -23,14 +23,56 @@ class QuizRepositoryImpl(
                     .get()
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
-                            val quiz = it.result.toObject(QuizModel::class.java)
-                            val oldList = quiz?.list?.toMutableList()
+                            val quizMap = it.result.data!!
+                            val list = getQuestions(quizMap)
+
+                            val quizModel = QuizModel(
+                                id = quizMap.get("id").toString(),
+                                name = quizMap.get("name").toString(),
+                                list = list
+                            )
+
+                            val oldList = quizModel?.list?.toMutableList()
                             oldList?.add(questionModel)
-                            quiz?.list = oldList?.toList()!!
+                            quizModel?.list = oldList?.toList()!!
 
                             fireStore.collection(QUIZ_DB)
                                 .document(quizId)
-                                .set(quiz)
+                                .set(quizModel)
+                                .addOnCompleteListener {
+                                    emitter.resume(it.isSuccessful)
+                                }
+                        }
+                    }
+            }
+        }
+    }
+
+    override suspend fun updateQuestion(quizId: String, questionModel: QuestionModel) {
+        withContext(Dispatchers.IO) {
+            suspendCoroutine { emitter ->
+                fireStore.collection(QUIZ_DB)
+                    .document(quizId)
+                    .get()
+                    .addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            val quizMap = it.result.data!!
+                            val list = getQuestions(quizMap)
+
+                            val quizModel = QuizModel(
+                                id = quizMap.get("id").toString(),
+                                name = quizMap.get("name").toString(),
+                                list = list
+                            )
+
+                            val oldList = quizModel.list.toMutableList()
+                            val oldQuestionIndex = oldList.indexOf(oldList.find { it?.id == questionModel.id })
+                            oldList[oldQuestionIndex] = questionModel
+                            quizModel.list = oldList.toList()
+
+                            fireStore.collection(QUIZ_DB)
+                                .document(quizId)
+                                .set(quizModel)
                                 .addOnCompleteListener {
                                     emitter.resume(it.isSuccessful)
                                 }
@@ -53,21 +95,7 @@ class QuizRepositoryImpl(
                         if (it.isSuccessful) {
                             emitter.resume(it.result?.documents?.map {
                                 val quizMap = it.data!!
-                                val list = (it.get("list") as ArrayList<HashMap<String, Any>>).map {
-                                    val question = if (it.get("answer") != null) {
-                                        OpenQuestion(
-                                            id = it["id"].toString(),
-                                            title = it["title"].toString(),
-                                            text = it["text"].toString(),
-                                            answer = it["answer"] as ArrayList<String>,
-                                            voiceover = it["voiceover"].toString(),
-                                            image = it["image"].toString()
-                                        )
-                                    } else {
-                                        null
-                                    }
-                                    question
-                                }
+                                val list = getQuestions(quizMap)
 
                                 val quizModel = QuizModel(
                                     id = quizMap.get("id").toString(),
@@ -91,21 +119,7 @@ class QuizRepositoryImpl(
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
                             val quizMap = it.result.data!!
-                            val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
-                                val question = if (it.get("answer") != null) {
-                                    OpenQuestion(
-                                        id = it["id"].toString(),
-                                        title = it["title"].toString(),
-                                        text = it["text"].toString(),
-                                        answer = it["answer"] as ArrayList<String>,
-                                        voiceover = it["voiceover"].toString(),
-                                        image = it["image"].toString()
-                                    )
-                                } else {
-                                    null
-                                }
-                                question
-                            }
+                            val list = getQuestions(quizMap)
 
                             val quizModel = QuizModel(
                                 id = quizMap.get("id").toString(),
@@ -147,6 +161,25 @@ class QuizRepositoryImpl(
                     }
             }
         }
+    }
+
+    private fun getQuestions(quizMap: Map<String, Any>): List<QuestionModel?> {
+        val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
+            val question = if (it.get("answer") != null) {
+                OpenQuestion(
+                    id = it["id"].toString(),
+                    title = it["title"].toString(),
+                    text = it["text"].toString(),
+                    answer = it["answer"] as ArrayList<String>,
+                    voiceover = it["voiceover"].toString(),
+                    image = it["image"].toString()
+                )
+            } else {
+                null
+            }
+            question
+        }
+        return list
     }
 
     companion object {

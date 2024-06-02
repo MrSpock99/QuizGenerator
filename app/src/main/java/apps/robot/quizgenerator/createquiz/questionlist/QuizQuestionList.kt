@@ -36,12 +36,12 @@ fun QuizQuestionList(quizId: String?, viewModel: QuizQuestionListViewModel = get
         LazyColumn {
             itemsIndexed(state.list, key = { _, question -> question.id }) { index, question ->
                 OpenQuestionItem(modifier = Modifier, questionModel = question, onClick = {
-                    navController.navigate(CreateOpenQuestionScreen(it.id))
+                    navController.navigate(CreateOpenQuestionScreen(quizId = state.quizId, questionId = it.id))
                 })
             }
         }
         FloatingActionButton(
-            onClick = { navController.navigate(CreateOpenQuestionScreen(state.quizId)) },
+            onClick = { navController.navigate(CreateOpenQuestionScreen(quizId = state.quizId, questionId = null)) },
             modifier = Modifier.align(Alignment.BottomEnd)
         ) {
             Icon(
@@ -59,6 +59,7 @@ fun OpenQuestionItem(modifier: Modifier, questionModel: QuestionModel, onClick: 
         .fillMaxWidth()
         .wrapContentHeight()
         .clickable { onClick(questionModel) }) {
+
         Column {
             Text(text = questionModel.title)
             Text(text = questionModel.text)

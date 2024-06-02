@@ -14,8 +14,35 @@ class CreateOpenQuestionViewModel(
 ) : ViewModel() {
 
     var state: MutableStateFlow<QuestionUiModel> =
-        MutableStateFlow(QuestionUiModel(quizId = "", questionName = "", questionText = "", emptyList()))
+        MutableStateFlow(
+            QuestionUiModel(
+                quizId = "", questionName = "", questionText = "", answers = emptyList(),
+                currentAnswer = "", isUpdatingQuestion = false
+            )
+        )
         private set
+
+    private var questionId: String? = null
+    private var questionModel: OpenQuestion? = null
+
+    fun onReceiveArgs(id: String, questionId: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val quiz = repository.getQuizModel(id)
+            this@CreateOpenQuestionViewModel.questionId = questionId
+
+            val question = quiz.list.find { it?.id == questionId } as? OpenQuestion
+            questionModel = question
+
+            state.value = state.value.copy(
+                quizId = id,
+                questionName = question?.title.orEmpty(),
+                questionText = question?.text.orEmpty(),
+                answers = question?.answer.orEmpty(),
+                isUpdatingQuestion = question != null
+            )
+        }
+
+    }
 
     fun onQuestionNameChange(name: String) {
         state.value = state.value.copy(questionName = name)
@@ -24,38 +51,61 @@ class CreateOpenQuestionViewModel(
     fun onQuestionTextChange(text: String) {
         state.value = state.value.copy(questionText = text)
     }
-    fun onQuestionAnswerChange(text: String) {
-        val old = state.value.answer.toMutableList()
+
+    fun onQuestionAnswerAdd(text: String) {
+        val old = state.value.answers.toMutableList()
         old.add(text)
-        state.value = state.value.copy(answer = old)
+        state.value = state.value.copy(answers = old)
     }
 
-    fun onCreateQuestionClick() {
-        val quizId = state.value.quizId
-        val model = OpenQuestion(
-            id = UUID.randomUUID().toString(),
-            title = state.value.questionName,
-            text = state.value.questionText,
-            answer = state.value.answer,
-            image = null,
-            voiceover = null
-        )
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.addQuestion(quizId, model)
+    fun onQuestionAnswerChange(text: String) {
+        state.value = state.value.copy(currentAnswer = text)
+    }
+
+    fun onCreateQuestionClick(onDone: () -> Unit) {
+        viewModelScope.launch {
+            val quizId = state.value.quizId
+            if (state.value.isUpdatingQuestion) {
+                val model = questionModel?.copy(
+                    title = state.value.questionName,
+                    text = state.value.questionText,
+                    answer = state.value.answers
+                )!!
+                val job = viewModelScope.launch(Dispatchers.IO) {
+                    repository.updateQuestion(quizId, model)
+                }
+                job.join()
+                onDone()
+            } else {
+                val model = OpenQuestion(
+                    id = UUID.randomUUID().toString(),
+                    title = state.value.questionName,
+                    text = state.value.questionText,
+                    answer = state.value.answers,
+                    image = null,
+                    voiceover = null
+                )
+                val job = viewModelScope.launch(Dispatchers.IO) {
+                    repository.addQuestion(quizId, model)
+                }
+                job.join()
+                onDone()
+            }
         }
     }
 
-    fun onReceiveArgs(id: String) {
-        state.value = state.value.copy(quizId = id)
+    fun onDeleteAnswerClick(answer: String) {
+        val old = state.value.answers.toMutableList()
+        old.remove(answer)
+        state.value = state.value.copy(answers = old)
     }
 
-    data class QuestionUiModel(val quizId: String, val questionName: String, val questionText: String, val answer: List<String>) :
-        CreateOpenQuestionUiModel
-
-    sealed interface CreateOpenQuestionUiModel {
-        object Loading : CreateOpenQuestionUiModel
-        data class QuestionModel(val quizId: String, val questionName: String, val questionText: String) :
-            CreateOpenQuestionUiModel
-        data class Error(val message: String) : CreateOpenQuestionUiModel
-    }
+    data class QuestionUiModel(
+        val quizId: String,
+        val questionName: String,
+        val questionText: String,
+        val answers: List<String>,
+        val currentAnswer: String,
+        val isUpdatingQuestion: Boolean
+    )
 }

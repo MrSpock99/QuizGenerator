@@ -1,6 +1,7 @@
 package apps.robot.quizgenerator.createquiz.main.presentation
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
@@ -26,7 +27,7 @@ fun QuizInfo(quizId: String?, viewModel: QuizInfoViewModel = getViewModel()) {
             modifier = Modifier.padding(it)
         ) {
             Column {
-                CustomTextField(label = "Quiz name", text = state.name, onChange = {
+                CustomTextField(modifier = Modifier.fillMaxWidth(), label = "Quiz name", text = state.name, onChange = {
                     viewModel.onNameChanged(it)
                 })
                 Button(onClick = { viewModel.onSaveBtnClick() }) {
