@@ -21,6 +21,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +33,11 @@ import org.koin.androidx.compose.getViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizList(viewModel: QuizListViewModel = getViewModel(), navController: NavController) {
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.onResume()
+
+    }
     Scaffold(
         topBar = {
             TopAppBar(title = {

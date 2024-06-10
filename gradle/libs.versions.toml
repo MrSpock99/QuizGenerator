@@ -1,6 +1,7 @@
 [versions]
 agp = "8.4.0"
 firebaseBom = "33.0.0"
+gsonVersion = "2.11.0"
 koinAndroidVersion = "3.2.0-beta-1"
 koinAndroidxComposeVersion = "3.2.0-beta-1"
 kotlin = "1.9.0"
@@ -14,6 +15,7 @@ activityCompose = "1.8.0"
 composeBom = "2023.08.00"
 composeNavigation = "2.8.0-alpha08"
 material = "1.6.7"
+qrcodeKotlin = "4.1.1"
 serialization = "1.6.3"
 firebaseFirestoreKtx = "25.0.0"
 googleServicesVersion = "4.4.1"
@@ -23,6 +25,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-material = { module = "androidx.compose.material:material", version.ref = "material" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+google-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 insert-koin-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxComposeVersion" }
 insert-koin-koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroidVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -42,6 +45,7 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
+qrcode-kotlin = { module = "io.github.g0dkar:qrcode-kotlin", version.ref = "qrcodeKotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

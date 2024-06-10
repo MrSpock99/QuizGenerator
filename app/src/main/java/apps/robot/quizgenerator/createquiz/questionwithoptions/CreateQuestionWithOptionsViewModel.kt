@@ -72,7 +72,8 @@ class CreateQuestionWithOptionsViewModel(
                     options = state.value.answers,
                     rightAnswerIndex = state.value.rightAnswerIndex,
                     image = null,
-                    voiceover = null
+                    voiceover = null,
+                    type = "QuestionWithOptions"
                 )
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.addQuestion(quizId!!, model)

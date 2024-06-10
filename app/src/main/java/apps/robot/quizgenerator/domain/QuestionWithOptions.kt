@@ -7,10 +7,11 @@ data class QuestionWithOptions(
     val rightAnswerIndex: Int,
     override val image: String?,
     override val voiceover: String?,
+    override val type: String
 ) :
-    QuestionModel(id, text, image, voiceover) {
+    QuestionModel(id, text, image, voiceover, type) {
 
-    constructor(options:  List<Option>) : this("", "", listOf(),-1, null, null)
+    constructor(options:  List<Option>) : this("", "", listOf(),-1, null, null, "")
 
     enum class Answer {
         TRUE,

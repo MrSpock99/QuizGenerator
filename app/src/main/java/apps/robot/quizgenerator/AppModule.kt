@@ -3,12 +3,12 @@ package apps.robot.quizgenerator
 import android.content.Context
 import apps.robot.quizgenerator.createquiz.main.presentation.QuizInfoViewModel
 import apps.robot.quizgenerator.createquiz.openquestion.CreateOpenQuestionViewModel
-import apps.robot.quizgenerator.createquiz.questionlist.QuizQuestionListViewModel
 import apps.robot.quizgenerator.createquiz.questionwithoptions.CreateQuestionWithOptionsViewModel
 import apps.robot.quizgenerator.data.QuizRepositoryImpl
 import apps.robot.quizgenerator.domain.QuizRepository
 import apps.robot.quizgenerator.quizlist.presentation.QuizListViewModel
 import com.google.firebase.firestore.FirebaseFirestore
+import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -18,16 +18,13 @@ fun appModule() = module {
 
     single { FirebaseFirestore.getInstance() }
 
-    factory<QuizRepository> { QuizRepositoryImpl(get()) }
+    factory<QuizRepository> { QuizRepositoryImpl(get(), androidContext()) }
 
     viewModel {
         QuizListViewModel(get())
     }
     viewModel {
-        QuizInfoViewModel(repository = get())
-    }
-    viewModel {
-        QuizQuestionListViewModel(repository = get())
+        QuizInfoViewModel(repository = get(), context = androidApplication())
     }
     viewModel {
         CreateOpenQuestionViewModel(repository = get())

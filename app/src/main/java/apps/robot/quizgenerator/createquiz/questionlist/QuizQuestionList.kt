@@ -33,27 +33,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import apps.robot.quizgenerator.R
+import apps.robot.quizgenerator.createquiz.main.presentation.QuizInfoViewModel
 import apps.robot.quizgenerator.domain.OpenQuestion
 import apps.robot.quizgenerator.domain.QuestionModel
 import apps.robot.quizgenerator.domain.QuestionWithOptions
 import apps.robot.quizgenerator.presentation.CreateOpenQuestionScreen
 import apps.robot.quizgenerator.presentation.CreateQuestionWithOptionsScreen
-import org.koin.androidx.compose.getViewModel
 
 @Composable
 fun QuizQuestionList(
-    quizId: String?,
-    viewModel: QuizQuestionListViewModel = getViewModel(),
+    viewModel: QuizInfoViewModel,
     navController: NavController
 ) {
     val state by viewModel.state.collectAsState()
     val openDialog = remember {
         mutableStateOf(false)
     }
-    LaunchedEffect(key1 = Unit) {
-        viewModel.onReceiveArgs(quizId)
-    }
 
+    LaunchedEffect(key1 = Unit) {
+        viewModel.onResume()
+
+    }
     if (openDialog.value) {
         CreateQuestionDialog(onCreateOpenQuestionClick = {
             navController.navigate(CreateOpenQuestionScreen(quizId = state.quizId, questionId = null))

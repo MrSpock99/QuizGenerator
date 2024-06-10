@@ -14,7 +14,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import apps.robot.quizgenerator.createquiz.main.presentation.QuizViewPager
 import apps.robot.quizgenerator.createquiz.openquestion.CreateOpenQuestion
-import apps.robot.quizgenerator.createquiz.questionlist.QuizQuestionList
 import apps.robot.quizgenerator.createquiz.questionwithoptions.CreateQuestionWithOptions
 import apps.robot.quizgenerator.quizlist.presentation.QuizList
 import apps.robot.quizgenerator.ui.theme.QuizGeneratorTheme
@@ -52,10 +51,6 @@ class MainActivity : ComponentActivity() {
                         val args = it.toRoute<CreateQuizViewPagerScreen>()
                         QuizViewPager(quizId = args.quizId, navController = navController)
                     }
-                    composable<QuizQuestionListScreen> {
-                        val args = it.toRoute<QuizQuestionListScreen>()
-                        QuizQuestionList(quizId = args.quizId, navController = navController)
-                    }
                 }
             }
         }
@@ -89,6 +84,3 @@ data class CreateQuestionWithOptionsScreen(val quizId: String, val questionId: S
 
 @Serializable
 data class CreateQuizViewPagerScreen(val quizId: String?)
-
-@Serializable
-data class QuizQuestionListScreen(val quizId: String?)

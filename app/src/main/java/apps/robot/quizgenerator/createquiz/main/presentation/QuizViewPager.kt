@@ -27,10 +27,11 @@ import androidx.navigation.NavHostController
 import apps.robot.quizgenerator.R
 import apps.robot.quizgenerator.createquiz.questionlist.QuizQuestionList
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuizViewPager(quizId: String?, navController: NavHostController) {
+fun QuizViewPager(quizId: String?, navController: NavHostController, quizInfoViewModel: QuizInfoViewModel = getViewModel()) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
     Scaffold(
@@ -91,8 +92,8 @@ fun QuizViewPager(quizId: String?, navController: NavHostController) {
                 // Viewpager
                 HorizontalPager(state = pagerState) { page ->
                     when (page) {
-                        0 -> QuizInfo(quizId =quizId)
-                        1 -> QuizQuestionList(quizId, navController =navController)
+                        0 -> QuizInfo(quizId = quizId, viewModel = quizInfoViewModel)
+                        1 -> QuizQuestionList(navController = navController, viewModel = quizInfoViewModel)
                     }
                 }
             }

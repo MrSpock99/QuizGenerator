@@ -76,7 +76,8 @@ class CreateOpenQuestionViewModel(
                     text = state.value.questionText,
                     answer = state.value.answers,
                     image = null,
-                    voiceover = null
+                    voiceover = null,
+                    type = "OpenQuestion"
                 )
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.addQuestion(quizId, model)

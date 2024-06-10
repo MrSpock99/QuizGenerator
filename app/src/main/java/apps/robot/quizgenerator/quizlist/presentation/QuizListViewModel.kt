@@ -15,14 +15,13 @@ class QuizListViewModel(
     var state: MutableStateFlow<QuizListUiState> = MutableStateFlow(QuizListUiState.Loading)
         private set
 
-    init {
+    fun onResume() {
         viewModelScope.launch(Dispatchers.IO) {
             val list = repository.getQuizList()
 
             state.emit(QuizListUiState.Success(list as List<QuizModel>))
         }
     }
-
     sealed class QuizListUiState {
 
         object Loading: QuizListUiState()

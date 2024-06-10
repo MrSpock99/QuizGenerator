@@ -67,6 +67,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore.ktx)
+    implementation (libs.google.gson)
+    implementation(libs.qrcode.kotlin)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
