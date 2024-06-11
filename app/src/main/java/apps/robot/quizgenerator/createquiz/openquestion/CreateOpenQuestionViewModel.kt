@@ -17,7 +17,7 @@ class CreateOpenQuestionViewModel(
         MutableStateFlow(
             QuestionUiModel(
                 quizId = "", questionText = "", answers = emptyList(),
-                currentAnswer = "", isUpdatingQuestion = false
+                currentAnswer = "", isUpdatingQuestion = false, points = 0
             )
         )
         private set
@@ -49,7 +49,7 @@ class CreateOpenQuestionViewModel(
 
     fun onQuestionAnswerAdd(text: String) {
         val old = state.value.answers.toMutableList()
-        old.add(text)
+        old.add(text.trim().lowercase())
         state.value = state.value.copy(answers = old)
     }
 
@@ -57,12 +57,20 @@ class CreateOpenQuestionViewModel(
         state.value = state.value.copy(currentAnswer = text)
     }
 
+    fun onQuestionPointsChange(text: String) {
+        val points = runCatching {
+           text.trim().toInt()
+        }.getOrDefault(0)
+
+        state.value = state.value.copy(points = points)
+    }
+
     fun onCreateQuestionClick(onDone: () -> Unit) {
         viewModelScope.launch {
             val quizId = state.value.quizId
             if (state.value.isUpdatingQuestion) {
                 val model = questionModel?.copy(
-                    text = state.value.questionText,
+                    text = state.value.questionText.trim(),
                     answer = state.value.answers
                 )!!
                 val job = viewModelScope.launch(Dispatchers.IO) {
@@ -73,11 +81,12 @@ class CreateOpenQuestionViewModel(
             } else {
                 val model = OpenQuestion(
                     id = UUID.randomUUID().toString(),
-                    text = state.value.questionText,
+                    text = state.value.questionText.trim(),
                     answer = state.value.answers,
                     image = null,
                     voiceover = null,
-                    type = "OpenQuestion"
+                    type = "OpenQuestion",
+                    points = state.value.points
                 )
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.addQuestion(quizId, model)
@@ -99,6 +108,7 @@ class CreateOpenQuestionViewModel(
         val questionText: String,
         val answers: List<String>,
         val currentAnswer: String,
-        val isUpdatingQuestion: Boolean
+        val isUpdatingQuestion: Boolean,
+        val points: Int
     )
 }

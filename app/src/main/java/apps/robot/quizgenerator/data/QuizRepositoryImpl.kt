@@ -98,7 +98,7 @@ class QuizRepositoryImpl(
         val json = Gson().toJson(quizModel)
         // By default, QRCodes are rendered as PNGs.
         val pngBytes = QRCode.ofCircles()
-            .build(json)
+            .build(quizModel["id"].toString())
             .render()
         writeBytesToSharedStorage(context, "${quizModel["name"]}.png", pngBytes.getBytes())
         return@withContext json
@@ -207,7 +207,8 @@ class QuizRepositoryImpl(
                     answer = it["answer"] as ArrayList<String>,
                     voiceover = it["voiceover"].toString(),
                     image = it["image"].toString(),
-                    type = "OpenQuestion"
+                    type = "OpenQuestion",
+                    points = it["points"].toString().toInt()
                 )
             } else {
                 QuestionWithOptions(
@@ -217,7 +218,8 @@ class QuizRepositoryImpl(
                     rightAnswerIndex = (it["rightAnswerIndex"] as Long).toInt(),
                     voiceover = it["voiceover"].toString(),
                     image = it["image"].toString(),
-                    type = "QuestionWithOptions"
+                    type = "QuestionWithOptions",
+                    points = it["points"].toString().toInt()
                 )
             }
             question

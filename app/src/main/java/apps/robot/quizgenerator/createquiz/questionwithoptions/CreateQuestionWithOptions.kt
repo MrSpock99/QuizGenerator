@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -25,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import apps.robot.quizgenerator.R
@@ -103,6 +106,16 @@ fun CreateQuestionWithOptions(
                             })
                     }
                 }
+                CustomTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = "Question points",
+                    onChange = { viewModel.onQuestionPointsChange(it) },
+                    text = state.points.toString(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    )
+                )
                 Button(onClick = {
                     viewModel.onCreateQuestionClick {
                         navController.popBackStack()

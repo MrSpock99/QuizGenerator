@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import apps.robot.quizgenerator.domain.QuizModel
 import apps.robot.quizgenerator.presentation.CreateQuizViewPagerScreen
@@ -118,6 +119,6 @@ fun QuizItem(modifier: Modifier, item: QuizModel, onClick: (String) -> Unit) {
                 onClick(item.id)
             }
     ) {
-        Text(text = item.name)
+        Text(text = item.name, fontSize = 32.sp)
     }
 }

@@ -3,6 +3,7 @@ package apps.robot.quizgenerator.createquiz.openquestion
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -20,6 +21,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
 import apps.robot.quizgenerator.R
 import apps.robot.quizgenerator.createquiz.presentation.CustomTextField
@@ -79,6 +82,16 @@ fun CreateOpenQuestion(
                     onDone = { viewModel.onQuestionAnswerAdd(it) },
                     onChange = { viewModel.onQuestionAnswerChange(it) },
                     onDeleteClick = { viewModel.onDeleteAnswerClick(it) }
+                )
+                CustomTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = "Question points",
+                    onChange = { viewModel.onQuestionPointsChange(it) },
+                    text = state.points.toString(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    )
                 )
                 Button(onClick = {
                     viewModel.onCreateQuestionClick {

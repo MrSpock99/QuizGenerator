@@ -41,6 +41,7 @@ fun CustomTextField(
     onChange: (String) -> Unit,
     text: String,
     onDone: ((String) -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
 ) {
     TextField(
         modifier = modifier,
@@ -49,7 +50,7 @@ fun CustomTextField(
             onChange(it)
         },
         label = { Text(label) },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+        keyboardOptions = keyboardOptions
     )
 }
 

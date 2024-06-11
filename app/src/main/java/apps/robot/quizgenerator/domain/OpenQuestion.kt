@@ -6,8 +6,9 @@ data class OpenQuestion(
     val answer: List<String> = listOf(),
     override val image: String? = "",
     override val voiceover: String? = "",
-    override val type: String
+    override val type: String,
+    override val points: Int
 ) :
-    QuestionModel(id, text, image, voiceover, type) {
-    constructor(answer: String) : this("", "", listOf(), null, null, "")
+    QuestionModel(id, text, image, voiceover, type, points) {
+    constructor(answer: String) : this("", "", listOf(), null, null, "",0)
 }

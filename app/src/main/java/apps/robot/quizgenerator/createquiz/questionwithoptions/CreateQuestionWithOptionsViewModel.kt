@@ -24,7 +24,8 @@ class CreateQuestionWithOptionsViewModel(
             "",
             defaultOptions,
             false,
-            -1
+            -1,
+            points = 0
         )
     )
 
@@ -52,11 +53,19 @@ class CreateQuestionWithOptionsViewModel(
         state.value = state.value.copy(text = text)
     }
 
+    fun onQuestionPointsChange(text: String) {
+        val points = runCatching {
+            text.trim().toInt()
+        }.getOrDefault(0)
+
+        state.value = state.value.copy(points = points)
+    }
+
     fun onCreateQuestionClick(onDone: () -> Unit) {
         viewModelScope.launch {
             if (state.value.isUpdatingQuestion) {
                 val model = questionModel?.copy(
-                    text = state.value.text,
+                    text = state.value.text.trim(),
                     options = state.value.answers,
                     rightAnswerIndex = state.value.rightAnswerIndex
                 )!!
@@ -68,12 +77,13 @@ class CreateQuestionWithOptionsViewModel(
             } else {
                 val model = QuestionWithOptions(
                     id = UUID.randomUUID().toString(),
-                    text = state.value.text,
+                    text = state.value.text.trim(),
                     options = state.value.answers,
                     rightAnswerIndex = state.value.rightAnswerIndex,
                     image = null,
                     voiceover = null,
-                    type = "QuestionWithOptions"
+                    type = "QuestionWithOptions",
+                    points = state.value.points
                 )
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.addQuestion(quizId!!, model)
@@ -100,6 +110,7 @@ class CreateQuestionWithOptionsViewModel(
         val text: String,
         val answers: List<String>,
         val isUpdatingQuestion: Boolean,
-        val rightAnswerIndex: Int
+        val rightAnswerIndex: Int,
+        val points: Int
     )
 }
