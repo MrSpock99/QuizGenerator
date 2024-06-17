@@ -37,7 +37,9 @@ class CreateOpenQuestionViewModel(
                 quizId = id,
                 questionText = question?.text.orEmpty(),
                 answers = question?.answer.orEmpty(),
-                isUpdatingQuestion = question != null
+                isUpdatingQuestion = question != null,
+                duration = question?.duration ?: 30,
+                points = question?.points ?: 1
             )
         }
 
@@ -71,7 +73,9 @@ class CreateOpenQuestionViewModel(
             if (state.value.isUpdatingQuestion) {
                 val model = questionModel?.copy(
                     text = state.value.questionText.trim(),
-                    answer = state.value.answers
+                    answer = state.value.answers,
+                    duration = state.value.duration,
+                    points = state.value.points
                 )!!
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.updateQuestion(quizId, model)
@@ -86,7 +90,8 @@ class CreateOpenQuestionViewModel(
                     image = null,
                     voiceover = null,
                     type = "OpenQuestion",
-                    points = state.value.points
+                    points = state.value.points,
+                    duration = state.value.duration
                 )
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.addQuestion(quizId, model)
@@ -103,12 +108,21 @@ class CreateOpenQuestionViewModel(
         state.value = state.value.copy(answers = old)
     }
 
+    fun onQuestionDurationChange(text: String) {
+        val duration = runCatching {
+            text.trim().toInt()
+        }.getOrDefault(0)
+
+        state.value = state.value.copy(duration = duration)
+    }
+
     data class QuestionUiModel(
         val quizId: String,
         val questionText: String,
         val answers: List<String>,
         val currentAnswer: String,
         val isUpdatingQuestion: Boolean,
-        val points: Int
+        val points: Int,
+        val duration: Int = 30
     )
 }

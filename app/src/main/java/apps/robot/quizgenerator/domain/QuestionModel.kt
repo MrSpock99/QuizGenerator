@@ -6,5 +6,6 @@ open class QuestionModel(
     open val image: String?,
     open val voiceover: String?,
     open val type: String,
-    open val points: Int
+    open val points: Int,
+    open val duration: Int
 )

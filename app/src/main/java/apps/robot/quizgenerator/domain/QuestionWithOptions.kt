@@ -8,19 +8,10 @@ data class QuestionWithOptions(
     override val image: String?,
     override val voiceover: String?,
     override val type: String,
-    override val points: Int
+    override val points: Int,
+    override val duration: Int
 ) :
-    QuestionModel(id, text, image, voiceover, type, points) {
+    QuestionModel(id, text, image, voiceover, type, points, duration) {
 
-    constructor(options:  List<Option>) : this("", "", listOf(),-1, null, null, "", 0)
-
-    enum class Answer {
-        TRUE,
-        FALSE
-    }
-
-    data class Option(
-        val text: String,
-        val type: Answer = Answer.FALSE
-    )
+    constructor() : this("", "", listOf(),-1, null, null, "", 0, 0)
 }

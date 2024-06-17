@@ -208,7 +208,8 @@ class QuizRepositoryImpl(
                     voiceover = it["voiceover"].toString(),
                     image = it["image"].toString(),
                     type = "OpenQuestion",
-                    points = it["points"].toString().toInt()
+                    points = it["points"]?.toString()?.toInt() ?: 1,
+                    duration = it["duration"]?.toString()?.toInt() ?: 30
                 )
             } else {
                 QuestionWithOptions(
@@ -219,7 +220,8 @@ class QuizRepositoryImpl(
                     voiceover = it["voiceover"].toString(),
                     image = it["image"].toString(),
                     type = "QuestionWithOptions",
-                    points = it["points"].toString().toInt()
+                    points = it["points"]?.toString()?.toInt() ?: 1,
+                    duration = it["duration"]?.toString()?.toInt() ?: 30
                 )
             }
             question
@@ -241,7 +243,8 @@ class QuizRepositoryImpl(
 
         return appDirectory
     }
-fun createFileInAppDirectory(context: Context, fileName: String): File? {
+
+    fun createFileInAppDirectory(context: Context, fileName: String): File? {
         val appDirectory = createAppDirectoryInDownloads(context)
         if (appDirectory != null) {
             val file = File(appDirectory, fileName)

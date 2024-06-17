@@ -116,6 +116,16 @@ fun CreateQuestionWithOptions(
                         keyboardType = KeyboardType.Number
                     )
                 )
+                CustomTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = "Question duration",
+                    onChange = { viewModel.onQuestionDurationChange(it) },
+                    text = state.duration.toString(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    )
+                )
                 Button(onClick = {
                     viewModel.onCreateQuestionClick {
                         navController.popBackStack()

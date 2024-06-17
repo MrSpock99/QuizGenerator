@@ -44,7 +44,9 @@ class CreateQuestionWithOptionsViewModel(
                 text = question?.text.orEmpty(),
                 answers = question?.options ?: defaultOptions,
                 isUpdatingQuestion = question != null,
-                rightAnswerIndex = question?.rightAnswerIndex ?: -1
+                rightAnswerIndex = question?.rightAnswerIndex ?: -1,
+                duration = question?.duration ?: 30,
+                points = question?.points ?: 1
             )
         }
     }
@@ -61,13 +63,22 @@ class CreateQuestionWithOptionsViewModel(
         state.value = state.value.copy(points = points)
     }
 
+    fun onQuestionDurationChange(text: String) {
+        val duration = runCatching {
+            text.trim().toInt()
+        }.getOrDefault(0)
+
+        state.value = state.value.copy(duration = duration)
+    }
+
     fun onCreateQuestionClick(onDone: () -> Unit) {
         viewModelScope.launch {
             if (state.value.isUpdatingQuestion) {
                 val model = questionModel?.copy(
                     text = state.value.text.trim(),
                     options = state.value.answers,
-                    rightAnswerIndex = state.value.rightAnswerIndex
+                    rightAnswerIndex = state.value.rightAnswerIndex,
+                    duration = state.value.duration
                 )!!
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.updateQuestion(quizId!!, model)
@@ -83,7 +94,8 @@ class CreateQuestionWithOptionsViewModel(
                     image = null,
                     voiceover = null,
                     type = "QuestionWithOptions",
-                    points = state.value.points
+                    points = state.value.points,
+                    duration = state.value.duration
                 )
                 val job = viewModelScope.launch(Dispatchers.IO) {
                     repository.addQuestion(quizId!!, model)
@@ -111,6 +123,7 @@ class CreateQuestionWithOptionsViewModel(
         val answers: List<String>,
         val isUpdatingQuestion: Boolean,
         val rightAnswerIndex: Int,
-        val points: Int
+        val points: Int,
+        val duration: Int = 30
     )
 }
