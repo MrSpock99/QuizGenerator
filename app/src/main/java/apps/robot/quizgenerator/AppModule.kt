@@ -7,6 +7,7 @@ import apps.robot.quizgenerator.createquiz.openquestion.CreateOpenQuestionViewMo
 import apps.robot.quizgenerator.createquiz.questionwithoptions.CreateQuestionWithOptionsViewModel
 import apps.robot.quizgenerator.data.QuizRepositoryImpl
 import apps.robot.quizgenerator.data.UploadManager
+import apps.robot.quizgenerator.domain.ImageUploadDelegate
 import apps.robot.quizgenerator.domain.QuizRepository
 import apps.robot.quizgenerator.quizlist.presentation.QuizListViewModel
 import com.google.firebase.firestore.FirebaseFirestore
@@ -26,6 +27,10 @@ fun appModule() = module {
 
     factory { UploadManager(WorkManager.getInstance(androidContext())) }
 
+    factory {
+        ImageUploadDelegate(uploadManager = get())
+    }
+
     viewModel {
         QuizListViewModel(get())
     }
@@ -33,9 +38,9 @@ fun appModule() = module {
         QuizInfoViewModel(repository = get(), context = androidApplication())
     }
     viewModel {
-        CreateOpenQuestionViewModel(repository = get(), uploadManager = get())
+        CreateOpenQuestionViewModel(repository = get(), imageUploadDelegate = get())
     }
     viewModel {
-        CreateQuestionWithOptionsViewModel(repository = get(), uploadManager = get())
+        CreateQuestionWithOptionsViewModel(repository = get(), imageUploadDelegate = get())
     }
 }

@@ -9,7 +9,6 @@ import apps.robot.quizgenerator.domain.QuestionModel
 import apps.robot.quizgenerator.domain.QuestionWithOptions
 import apps.robot.quizgenerator.domain.QuizModel
 import apps.robot.quizgenerator.domain.QuizRepository
-import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
@@ -77,7 +76,7 @@ class QuizRepositoryImpl(
                         if (it.isSuccessful) {
                             launch {
                                 val quizMap = it.result.data!!
-                                val list = getQuestions(quizMap)
+                                val list = getQuestions(quizMap, true)
 
                                 val quizModel = QuizModel(
                                     id = quizMap.get("id").toString(),
@@ -213,21 +212,26 @@ class QuizRepositoryImpl(
         }
     }
 
-    private suspend fun getQuestions(quizMap: Map<String, Any>, getDownloadUrls: Boolean = false): List<QuestionModel?> {
-
+    private suspend fun getQuestions(quizMap: Map<String, Any>, getDownloadUrls: Boolean = true): List<QuestionModel?> = withContext(Dispatchers.IO) {
             val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
-                val questionImagePath = it["image"].toString()
-                val answerImagePath = it["answerImage"].toString()
-                val questionImageRef = if (questionImagePath != "null" && questionImagePath.isNotBlank() && getDownloadUrls) {
-                    getDownloadUrl(storage.reference.child(questionImagePath).downloadUrl)
+                val questionImagePath = it["image"]?.toString()
+                val answerImagePath = it["answerImage"]?.toString()
+             /*   val questionImageRefJob = if (questionImagePath != "null" && questionImagePath.isNotBlank() && getDownloadUrls) {
+                    async {
+                        getDownloadUrl(storage.reference.child(questionImagePath).downloadUrl)
+                    }
                 } else {
                     null
                 }
-                val answerImageRef = if (answerImagePath != "null" && answerImagePath.isNotBlank() && getDownloadUrls) {
-                    getDownloadUrl(storage.reference.child(answerImagePath).downloadUrl)
+                val answerImageRefJob = if (answerImagePath != "null" && answerImagePath.isNotBlank() && getDownloadUrls) {
+                    async {
+                        getDownloadUrl(storage.reference.child(answerImagePath).downloadUrl)
+                    }
                 } else {
                     null
                 }
+                val questionImageRef = questionImageRefJob?.await()
+                val answerImageRef = answerImageRefJob?.await()*/
 
                 val question = if (it.get("answer") != null) {
                     OpenQuestion(
@@ -235,10 +239,10 @@ class QuizRepositoryImpl(
                         text = it["text"].toString(),
                         answer = it["answer"] as ArrayList<String>,
                         voiceover = it["voiceover"].toString(),
-                        image = questionImageRef?.toString(),
+                        image = questionImagePath,
                         points = it["points"]?.toString()?.toInt() ?: 1,
                         duration = it["duration"]?.toString()?.toInt() ?: 30,
-                        answerImage = answerImageRef?.toString()
+                        answerImage = answerImagePath
                     )
                 } else {
                     QuestionWithOptions(
@@ -247,20 +251,24 @@ class QuizRepositoryImpl(
                         options = it["options"] as ArrayList<String>,
                         rightAnswerIndex = (it["rightAnswerIndex"] as Long).toInt(),
                         voiceover = it["voiceover"].toString(),
-                        image = questionImageRef?.toString(),
+                        image = questionImagePath,
                         points = it["points"]?.toString()?.toInt() ?: 1,
                         duration = it["duration"]?.toString()?.toInt() ?: 30,
-                        answerImage = answerImageRef?.toString()
+                        answerImage = answerImagePath
                     )
                 }
                 question
             }
             //continuation.resume(list)
-        return list
+        return@withContext list
         }
 
-    private suspend fun getDownloadUrl(task: Task<Uri>): Uri = suspendCancellableCoroutine { continuation ->
-        task.addOnCompleteListener {
+    override suspend fun getDownloadUrl(path: String?): Uri? = suspendCancellableCoroutine { continuation ->
+        if (path.isNullOrBlank()) {
+            continuation.resume(null)
+            return@suspendCancellableCoroutine
+        }
+        storage.reference.child(path).downloadUrl.addOnCompleteListener {
             if (it.isSuccessful) {
                 continuation.resume(it.result)
             } else {

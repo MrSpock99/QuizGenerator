@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -39,6 +41,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import apps.robot.quizgenerator.R
+import apps.robot.quizgenerator.createquiz.main.presentation.QuestionUiState
 import apps.robot.quizgenerator.createquiz.presentation.CustomTextField
 import coil.compose.rememberAsyncImagePainter
 import org.koin.androidx.compose.getViewModel
@@ -66,122 +69,139 @@ fun CreateQuestionWithOptions(
         viewModel.onReceiveArgs(quizId, questionId)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Create open question")
-                }, navigationIcon = {
-                    IconButton(
-                        modifier = Modifier
-                            .alpha(ContentAlpha.medium),
-                        onClick = {
-                            navController.popBackStack()
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_arrow_back_ios_24),
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            contentDescription = "Back button"
-                        )
-                    }
-                })
+    when (state) {
+        QuestionUiState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(modifier = Modifier.size(100.dp))
+            }
         }
-    ) {
-        Surface(
-            modifier = Modifier.padding(it)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
 
+        is QuestionUiState.QuestionWithOptionsUiState -> {
+            val currentState = state as QuestionUiState.QuestionWithOptionsUiState
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Text(text = "Create open question")
+                        }, navigationIcon = {
+                            IconButton(
+                                modifier = Modifier
+                                    .alpha(ContentAlpha.medium),
+                                onClick = {
+                                    navController.popBackStack()
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_arrow_back_ios_24),
+                                    tint = MaterialTheme.colorScheme.onBackground,
+                                    contentDescription = "Back button"
+                                )
+                            }
+                        })
+                }
             ) {
-                CustomTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    label = "Question text",
-                    onChange = { viewModel.onQuestionTextChange(it) },
-                    text = state.text
-                )
-
-                state.answers.forEachIndexed { index, option ->
-                    Row(
+                Surface(
+                    modifier = Modifier.padding(it)
+                ) {
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                viewModel.onAnswerChecked(index)
-                            },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = index == state.rightAnswerIndex,
-                            onCheckedChange = { viewModel.onAnswerChecked(index) }
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+
+                        ) {
+                        CustomTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            label = "Question text",
+                            onChange = { viewModel.onQuestionTextChange(it) },
+                            text = currentState.questionText
+                        )
+
+                        currentState.answers.forEachIndexed { index, option ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.onAnswerChecked(index)
+                                    },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = index == currentState.rightAnswerIndex,
+                                    onCheckedChange = { viewModel.onAnswerChecked(index) }
+                                )
+                                CustomTextField(
+                                    text = option,
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    label = "",
+                                    onChange = {
+                                        viewModel.onAnswerTextChange(it, index)
+                                    })
+                            }
+                        }
+                        CustomTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            label = "Question points",
+                            onChange = { viewModel.onQuestionPointsChange(it) },
+                            text = state.points.toString(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Number
+                            )
                         )
                         CustomTextField(
-                            text = option,
-                            modifier = Modifier.padding(start = 8.dp),
-                            label = "",
-                            onChange = {
-                                viewModel.onAnswerTextChange(it, index)
-                            })
+                            modifier = Modifier.fillMaxWidth(),
+                            label = "Question duration",
+                            onChange = { viewModel.onQuestionDurationChange(it) },
+                            text = state.duration.toString(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Number
+                            )
+                        )
+                        Image(
+                            modifier = Modifier.size(100.dp),
+                            painter = rememberAsyncImagePainter(state.questionImage),
+                            contentDescription = "My Image"
+                        )
+                        Button(onClick = {
+                            questionImageLauncher.launch("image/*")
+                        }) {
+                            val text = "Question image"
+                            Text(text = text)
+                        }
+                        Image(
+                            modifier = Modifier.size(100.dp),
+                            painter = rememberAsyncImagePainter(state.answerImage, onState = {
+                                Log.d("MYTAG", "Image state: $it")
+                            }),
+                            contentDescription = "My Image"
+                        )
+                        Button(onClick = {
+                            answerImageLauncher.launch("image/*")
+                        }) {
+                            val text = "Answer image"
+                            Text(text = text)
+                        }
+                        Button(onClick = {
+                            viewModel.onCreateQuestionClick {
+                                navController.popBackStack()
+                            }
+                        }) {
+                            val text = if (state.isUpdatingQuestion) {
+                                "Update"
+                            } else {
+                                "Create"
+                            }
+                            Text(text = text)
+                        }
                     }
-                }
-                CustomTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    label = "Question points",
-                    onChange = { viewModel.onQuestionPointsChange(it) },
-                    text = state.points.toString(),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Number
-                    )
-                )
-                CustomTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    label = "Question duration",
-                    onChange = { viewModel.onQuestionDurationChange(it) },
-                    text = state.duration.toString(),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Number
-                    )
-                )
-                Image(
-                    modifier = Modifier.size(100.dp),
-                    painter = rememberAsyncImagePainter(state.questionImage),
-                    contentDescription = "My Image"
-                )
-                Button(onClick = {
-                    questionImageLauncher.launch("image/*")
-                }) {
-                    val text = "Question image"
-                    Text(text = text)
-                }
-                Image(
-                    modifier = Modifier.size(100.dp),
-                    painter = rememberAsyncImagePainter(state.answerImage, onState = {
-                        Log.d("MYTAG", "Image state: $it")
-                    }),
-                    contentDescription = "My Image"
-                )
-                Button(onClick = {
-                    answerImageLauncher.launch("image/*")
-                }) {
-                    val text = "Answer image"
-                    Text(text = text)
-                }
-                Button(onClick = {
-                    viewModel.onCreateQuestionClick {
-                        navController.popBackStack()
-                    }
-                }) {
-                    val text = if (state.isUpdatingQuestion) {
-                        "Update"
-                    } else {
-                        "Create"
-                    }
-                    Text(text = text)
                 }
             }
         }
+
+        else -> {
+            // nothing
+        }
     }
+
 }
