@@ -1,11 +1,12 @@
 package apps.robot.quizgenerator.domain
 
-open class QuestionModel(
-    open val id: String,
-    open val text: String,
-    open val image: String?,
-    open val voiceover: String?,
-    open val type: String,
-    open val points: Int,
-    open val duration: Int
-)
+sealed class QuestionModel() {
+    abstract val id: String
+    abstract val text: String
+    abstract val image: String?
+    abstract val voiceover: String?
+    abstract val type: String
+    abstract val points: Int
+    abstract val duration: Int
+    abstract val answerImage: String?
+}

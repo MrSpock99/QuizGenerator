@@ -1,6 +1,7 @@
 package apps.robot.quizgenerator.data
 
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
 import androidx.core.content.ContextCompat
 import apps.robot.quizgenerator.domain.OpenQuestion
@@ -8,9 +9,13 @@ import apps.robot.quizgenerator.domain.QuestionModel
 import apps.robot.quizgenerator.domain.QuestionWithOptions
 import apps.robot.quizgenerator.domain.QuizModel
 import apps.robot.quizgenerator.domain.QuizRepository
+import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import qrcode.QRCode
 import java.io.File
@@ -18,11 +23,13 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.UUID
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 class QuizRepositoryImpl(
     private val fireStore: FirebaseFirestore,
-    private val context: Context
+    private val context: Context,
+    private val storage: FirebaseStorage
 ) : QuizRepository {
 
     override suspend fun addQuestion(quizId: String, questionModel: QuestionModel): Boolean {
@@ -33,25 +40,27 @@ class QuizRepositoryImpl(
                     .get()
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
-                            val quizMap = it.result.data!!
-                            val list = getQuestions(quizMap)
+                            launch {
+                                val quizMap = it.result.data!!
+                                val list = getQuestions(quizMap)
 
-                            val quizModel = QuizModel(
-                                id = quizMap.get("id").toString(),
-                                name = quizMap.get("name").toString(),
-                                list = list
-                            )
+                                val quizModel = QuizModel(
+                                    id = quizMap.get("id").toString(),
+                                    name = quizMap.get("name").toString(),
+                                    list = list
+                                )
 
-                            val oldList = quizModel?.list?.toMutableList()
-                            oldList?.add(questionModel)
-                            quizModel?.list = oldList?.toList()!!
+                                val oldList = quizModel?.list?.toMutableList()
+                                oldList?.add(questionModel)
+                                quizModel?.list = oldList?.toList()!!
 
-                            fireStore.collection(QUIZ_DB)
-                                .document(quizId)
-                                .set(quizModel)
-                                .addOnCompleteListener {
-                                    emitter.resume(it.isSuccessful)
-                                }
+                                fireStore.collection(QUIZ_DB)
+                                    .document(quizId)
+                                    .set(quizModel)
+                                    .addOnCompleteListener {
+                                        emitter.resume(it.isSuccessful)
+                                    }
+                            }
                         }
                     }
             }
@@ -66,26 +75,28 @@ class QuizRepositoryImpl(
                     .get()
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
-                            val quizMap = it.result.data!!
-                            val list = getQuestions(quizMap)
+                            launch {
+                                val quizMap = it.result.data!!
+                                val list = getQuestions(quizMap)
 
-                            val quizModel = QuizModel(
-                                id = quizMap.get("id").toString(),
-                                name = quizMap.get("name").toString(),
-                                list = list
-                            )
+                                val quizModel = QuizModel(
+                                    id = quizMap.get("id").toString(),
+                                    name = quizMap.get("name").toString(),
+                                    list = list
+                                )
 
-                            val oldList = quizModel.list.toMutableList()
-                            val oldQuestionIndex = oldList.indexOf(oldList.find { it?.id == questionModel.id })
-                            oldList[oldQuestionIndex] = questionModel
-                            quizModel.list = oldList.toList()
+                                val oldList = quizModel.list.toMutableList()
+                                val oldQuestionIndex = oldList.indexOf(oldList.find { it?.id == questionModel.id })
+                                oldList[oldQuestionIndex] = questionModel
+                                quizModel.list = oldList.toList()
 
-                            fireStore.collection(QUIZ_DB)
-                                .document(quizId)
-                                .set(quizModel)
-                                .addOnCompleteListener {
-                                    emitter.resume(it.isSuccessful)
-                                }
+                                fireStore.collection(QUIZ_DB)
+                                    .document(quizId)
+                                    .set(quizModel)
+                                    .addOnCompleteListener {
+                                        emitter.resume(it.isSuccessful)
+                                    }
+                            }
                         }
                     }
             }
@@ -111,17 +122,19 @@ class QuizRepositoryImpl(
                     .get()
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
-                            emitter.resume(it.result?.documents?.map {
-                                val quizMap = it.data!!
-                                val list = getQuestions(quizMap)
+                            launch {
+                                emitter.resume(it.result?.documents?.map {
+                                    val quizMap = it.data!!
+                                    val list = getQuestions(quizMap)
 
-                                val quizModel = QuizModel(
-                                    id = quizMap.get("id").toString(),
-                                    name = quizMap.get("name").toString(),
-                                    list = list
-                                )
-                                quizModel
-                            } ?: listOf())
+                                    val quizModel = QuizModel(
+                                        id = quizMap.get("id").toString(),
+                                        name = quizMap.get("name").toString(),
+                                        list = list
+                                    )
+                                    quizModel
+                                } ?: listOf())
+                            }
                         }
                     }
             }
@@ -136,15 +149,17 @@ class QuizRepositoryImpl(
                     .get()
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
-                            val quizMap = it.result.data!!
-                            val list = getQuestions(quizMap)
+                            launch {
+                                val quizMap = it.result.data!!
+                                val list = getQuestions(quizMap,true)
 
-                            val quizModel = QuizModel(
-                                id = quizMap.get("id").toString(),
-                                name = quizMap.get("name").toString(),
-                                list = list
-                            )
-                            emitter.resume(quizModel)
+                                val quizModel = QuizModel(
+                                    id = quizMap.get("id").toString(),
+                                    name = quizMap.get("name").toString(),
+                                    list = list
+                                )
+                                emitter.resume(quizModel)
+                            }
                         }
                     }
             }
@@ -198,35 +213,60 @@ class QuizRepositoryImpl(
         }
     }
 
-    private fun getQuestions(quizMap: Map<String, Any>): List<QuestionModel?> {
-        val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
-            val question = if (it.get("answer") != null) {
-                OpenQuestion(
-                    id = it["id"].toString(),
-                    text = it["text"].toString(),
-                    answer = it["answer"] as ArrayList<String>,
-                    voiceover = it["voiceover"].toString(),
-                    image = it["image"].toString(),
-                    type = "OpenQuestion",
-                    points = it["points"]?.toString()?.toInt() ?: 1,
-                    duration = it["duration"]?.toString()?.toInt() ?: 30
-                )
-            } else {
-                QuestionWithOptions(
-                    id = it["id"].toString(),
-                    text = it["text"].toString(),
-                    options = it["options"] as ArrayList<String>,
-                    rightAnswerIndex = (it["rightAnswerIndex"] as Long).toInt(),
-                    voiceover = it["voiceover"].toString(),
-                    image = it["image"].toString(),
-                    type = "QuestionWithOptions",
-                    points = it["points"]?.toString()?.toInt() ?: 1,
-                    duration = it["duration"]?.toString()?.toInt() ?: 30
-                )
+    private suspend fun getQuestions(quizMap: Map<String, Any>, getDownloadUrls: Boolean = false): List<QuestionModel?> {
+
+            val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
+                val questionImagePath = it["image"].toString()
+                val answerImagePath = it["answerImage"].toString()
+                val questionImageRef = if (questionImagePath != "null" && questionImagePath.isNotBlank() && getDownloadUrls) {
+                    getDownloadUrl(storage.reference.child(questionImagePath).downloadUrl)
+                } else {
+                    null
+                }
+                val answerImageRef = if (answerImagePath != "null" && answerImagePath.isNotBlank() && getDownloadUrls) {
+                    getDownloadUrl(storage.reference.child(answerImagePath).downloadUrl)
+                } else {
+                    null
+                }
+
+                val question = if (it.get("answer") != null) {
+                    OpenQuestion(
+                        id = it["id"].toString(),
+                        text = it["text"].toString(),
+                        answer = it["answer"] as ArrayList<String>,
+                        voiceover = it["voiceover"].toString(),
+                        image = questionImageRef?.toString(),
+                        points = it["points"]?.toString()?.toInt() ?: 1,
+                        duration = it["duration"]?.toString()?.toInt() ?: 30,
+                        answerImage = answerImageRef?.toString()
+                    )
+                } else {
+                    QuestionWithOptions(
+                        id = it["id"].toString(),
+                        text = it["text"].toString(),
+                        options = it["options"] as ArrayList<String>,
+                        rightAnswerIndex = (it["rightAnswerIndex"] as Long).toInt(),
+                        voiceover = it["voiceover"].toString(),
+                        image = questionImageRef?.toString(),
+                        points = it["points"]?.toString()?.toInt() ?: 1,
+                        duration = it["duration"]?.toString()?.toInt() ?: 30,
+                        answerImage = answerImageRef?.toString()
+                    )
+                }
+                question
             }
-            question
-        }
+            //continuation.resume(list)
         return list
+        }
+
+    private suspend fun getDownloadUrl(task: Task<Uri>): Uri = suspendCancellableCoroutine { continuation ->
+        task.addOnCompleteListener {
+            if (it.isSuccessful) {
+                continuation.resume(it.result)
+            } else {
+                continuation.resumeWithException(it.exception!!)
+            }
+        }
     }
 
     fun createAppDirectoryInDownloads(context: Context): File? {

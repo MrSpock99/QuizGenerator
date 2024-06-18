@@ -1,7 +1,10 @@
 package apps.robot.quizgenerator.createquiz.questionwithoptions
 
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import apps.robot.quizgenerator.data.UploadManager
 import apps.robot.quizgenerator.domain.QuestionWithOptions
 import apps.robot.quizgenerator.domain.QuizRepository
 import kotlinx.coroutines.Dispatchers
@@ -10,7 +13,8 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 class CreateQuestionWithOptionsViewModel(
-    private val repository: QuizRepository
+    private val repository: QuizRepository,
+    private val uploadManager: UploadManager
 ) : ViewModel() {
 
     private val defaultOptions = listOf(
@@ -46,7 +50,9 @@ class CreateQuestionWithOptionsViewModel(
                 isUpdatingQuestion = question != null,
                 rightAnswerIndex = question?.rightAnswerIndex ?: -1,
                 duration = question?.duration ?: 30,
-                points = question?.points ?: 1
+                points = question?.points ?: 1,
+                questionImage = question?.image?.toUri(),
+                answerImage = question?.answerImage?.toUri()
             )
         }
     }
@@ -73,14 +79,44 @@ class CreateQuestionWithOptionsViewModel(
 
     fun onCreateQuestionClick(onDone: () -> Unit) {
         viewModelScope.launch {
+            val questionImage = state.value.questionImage
+
+            val questionImagePath = if (questionImage != null) {
+                uploadManager.uploadFileFromUri(
+                    quizId = quizId!!,
+                    fileType = "image",
+                    questionId = "question_${state.value.text}",
+                    uri = questionImage,
+                    type = "question_image",
+                )
+            } else {
+                null
+            }
+
+            val answerImage = state.value.answerImage
+
+            val answerImagePath = if (answerImage != null) {
+                uploadManager.uploadFileFromUri(
+                    quizId = quizId!!,
+                    fileType = "image",
+                    questionId = "question_${state.value.text}",
+                    uri = answerImage,
+                    type = "answer_image",
+                )
+            } else {
+                null
+            }
+
             if (state.value.isUpdatingQuestion) {
                 val model = questionModel?.copy(
                     text = state.value.text.trim(),
                     options = state.value.answers,
                     rightAnswerIndex = state.value.rightAnswerIndex,
-                    duration = state.value.duration
+                    duration = state.value.duration,
+                    image = questionImagePath,
+                    answerImage = answerImagePath
                 )!!
-                val job = viewModelScope.launch(Dispatchers.IO) {
+                val job = launch(Dispatchers.IO) {
                     repository.updateQuestion(quizId!!, model)
                 }
                 job.join()
@@ -91,13 +127,13 @@ class CreateQuestionWithOptionsViewModel(
                     text = state.value.text.trim(),
                     options = state.value.answers,
                     rightAnswerIndex = state.value.rightAnswerIndex,
-                    image = null,
+                    image = questionImagePath,
                     voiceover = null,
-                    type = "QuestionWithOptions",
                     points = state.value.points,
-                    duration = state.value.duration
+                    duration = state.value.duration,
+                    answerImage = answerImagePath
                 )
-                val job = viewModelScope.launch(Dispatchers.IO) {
+                val job = launch(Dispatchers.IO) {
                     repository.addQuestion(quizId!!, model)
                 }
                 job.join()
@@ -118,12 +154,26 @@ class CreateQuestionWithOptionsViewModel(
         )
     }
 
+    fun onQuestionImageSelected(uri: Uri) {
+        state.value = state.value.copy(
+            questionImage = uri
+        )
+    }
+
+    fun onAnswerImageSelected(uri: Uri) {
+        state.value = state.value.copy(
+            answerImage = uri
+        )
+    }
+
     data class CreateQuestionsWithOptionsUiModel(
         val text: String,
         val answers: List<String>,
         val isUpdatingQuestion: Boolean,
         val rightAnswerIndex: Int,
         val points: Int,
-        val duration: Int = 30
+        val duration: Int = 30,
+        val questionImage: Uri? = null,
+        val answerImage: Uri? = null
     )
 }

@@ -1,8 +1,14 @@
 package apps.robot.quizgenerator.createquiz.openquestion
 
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
@@ -23,10 +29,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import apps.robot.quizgenerator.R
 import apps.robot.quizgenerator.createquiz.presentation.CustomTextField
 import apps.robot.quizgenerator.createquiz.presentation.TextFieldWithBubble
+import coil.compose.rememberAsyncImagePainter
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +46,14 @@ fun CreateOpenQuestion(
     viewModel: CreateOpenQuestionViewModel = getViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-
+    val questionImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        Log.d("TAG", "URI: $uri")
+        viewModel.onQuestionImageSelected(uri!!)
+    }
+    val answerImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        Log.d("TAG", "URI: $uri")
+        viewModel.onAnswerImageSelected(uri!!)
+    }
     LaunchedEffect(key1 = Unit) {
         viewModel.onReceiveArgs(quizId, questionId)
     }
@@ -103,6 +118,30 @@ fun CreateOpenQuestion(
                         keyboardType = KeyboardType.Number
                     )
                 )
+                Image(
+                    modifier = Modifier.size(100.dp),
+                    painter = rememberAsyncImagePainter(state.questionImage),
+                    contentDescription = "My Image"
+                )
+                Button(onClick = {
+                    questionImageLauncher.launch("image/*")
+                }) {
+                    val text = "Question image"
+                    Text(text = text)
+                }
+                Image(
+                    modifier = Modifier.size(100.dp),
+                    painter = rememberAsyncImagePainter(state.answerImage, onState = {
+                        Log.d("MYTAG", "onState: $it")
+                    }),
+                    contentDescription = "My Image"
+                )
+                Button(onClick = {
+                    answerImageLauncher.launch("image/*")
+                }) {
+                    val text = "Answer image"
+                    Text(text = text)
+                }
                 Button(onClick = {
                     viewModel.onCreateQuestionClick {
                         navController.popBackStack()

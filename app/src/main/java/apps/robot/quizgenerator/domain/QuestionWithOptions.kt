@@ -7,11 +7,12 @@ data class QuestionWithOptions(
     val rightAnswerIndex: Int,
     override val image: String?,
     override val voiceover: String?,
-    override val type: String,
     override val points: Int,
-    override val duration: Int
+    override val duration: Int,
+    override val answerImage: String?,
 ) :
-    QuestionModel(id, text, image, voiceover, type, points, duration) {
+    QuestionModel() {
 
-    constructor() : this("", "", listOf(),-1, null, null, "", 0, 0)
+    override val type: String
+        get() = "QuestionWithOptions"
 }

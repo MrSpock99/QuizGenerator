@@ -69,7 +69,10 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation (libs.google.gson)
     implementation(libs.qrcode.kotlin)
-
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.coil.compose)
+    implementation (libs.zelory.compressor)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

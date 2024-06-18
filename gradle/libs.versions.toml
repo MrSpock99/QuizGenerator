@@ -1,6 +1,8 @@
 [versions]
 agp = "8.4.0"
-firebaseBom = "33.0.0"
+coilCompose = "2.4.0"
+compressorVersion = "3.0.1"
+firebaseBom = "33.1.0"
 gsonVersion = "2.11.0"
 koinAndroidVersion = "3.2.0-beta-1"
 koinAndroidxComposeVersion = "3.2.0-beta-1"
@@ -18,11 +20,15 @@ material = "1.6.7"
 qrcodeKotlin = "4.1.1"
 serialization = "1.6.3"
 firebaseFirestoreKtx = "25.0.0"
-googleServicesVersion = "4.4.1"
+googleServicesVersion = "4.4.2"
+firebaseStorageKtx = "21.0.0"
+workRuntimeKtx = "2.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-material = { module = "androidx.compose.material:material", version.ref = "material" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 google-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
@@ -46,6 +52,8 @@ navigation-compose = { module = "androidx.navigation:navigation-compose", versio
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 qrcode-kotlin = { module = "io.github.g0dkar:qrcode-kotlin", version.ref = "qrcodeKotlin" }
+firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+zelory-compressor = { module = "id.zelory:compressor", version.ref = "compressorVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
