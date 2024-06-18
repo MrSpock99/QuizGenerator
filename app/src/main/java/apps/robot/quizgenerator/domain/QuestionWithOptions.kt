@@ -1,5 +1,8 @@
 package apps.robot.quizgenerator.domain
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class QuestionWithOptions(
     override val id: String,
     override val text: String,

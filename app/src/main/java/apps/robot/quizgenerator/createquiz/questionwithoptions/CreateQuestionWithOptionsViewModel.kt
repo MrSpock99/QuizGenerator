@@ -1,6 +1,7 @@
 package apps.robot.quizgenerator.createquiz.questionwithoptions
 
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import apps.robot.quizgenerator.createquiz.main.presentation.QuestionUiState
@@ -45,8 +46,8 @@ class CreateQuestionWithOptionsViewModel(
                 rightAnswerIndex = question?.rightAnswerIndex ?: -1,
                 duration = (question?.duration ?: 30).toString(),
                 points = (question?.points ?: 1).toString(),
-                answerImage = repository.getDownloadUrl(question?.answerImage),
-                questionImage = repository.getDownloadUrl(question?.image),
+                answerImage = (question?.answerImage)?.toUri(),
+                questionImage = (question?.image)?.toUri(),
             )
         }
     }

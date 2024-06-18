@@ -11,7 +11,10 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class UploadWorker(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
@@ -42,7 +45,17 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) : Corout
         }?.addOnFailureListener {
             continuation.resumeWithException(it)
         }*/
-        return Result.success(Data.Builder().putString("path", path).build())
+        return Result.success(Data.Builder().putString("path", getDownloadUrl(imagesRef).toString()).build())
     }
 
+    private suspend fun getDownloadUrl(path: StorageReference?): Uri? = suspendCancellableCoroutine { continuation ->
+
+       (path)?.downloadUrl?.addOnCompleteListener {
+            if (it.isSuccessful) {
+                continuation.resume(it.result)
+            } else {
+                continuation.resumeWithException(it.exception!!)
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package apps.robot.quizgenerator.createquiz.openquestion
 
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import apps.robot.quizgenerator.createquiz.main.presentation.QuestionUiState
@@ -42,8 +43,8 @@ class CreateOpenQuestionViewModel(
                 isUpdatingQuestion = question != null,
                 duration = (question?.duration ?: 30).toString(),
                 points = (question?.points ?: 1).toString(),
-                answerImage = repository.getDownloadUrl(question?.answerImage),
-                questionImage = repository.getDownloadUrl(question?.image),
+                answerImage = (question?.answerImage)?.toUri(),
+                questionImage = (question?.image)?.toUri(),
                 currentAnswer = ""
             )
         }

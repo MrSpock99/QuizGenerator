@@ -1,5 +1,8 @@
 package apps.robot.quizgenerator.domain
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class OpenQuestion(
     override var id: String = "",
     override val text: String = "",
