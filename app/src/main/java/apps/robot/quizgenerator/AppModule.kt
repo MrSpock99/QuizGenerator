@@ -5,6 +5,7 @@ import androidx.work.WorkManager
 import apps.robot.quizgenerator.createquiz.main.presentation.QuizInfoViewModel
 import apps.robot.quizgenerator.createquiz.openquestion.CreateOpenQuestionViewModel
 import apps.robot.quizgenerator.createquiz.questionwithoptions.CreateQuestionWithOptionsViewModel
+import apps.robot.quizgenerator.createquiz.round.CreateQuizRoundViewModel
 import apps.robot.quizgenerator.data.QuizRepositoryImpl
 import apps.robot.quizgenerator.data.UploadManager
 import apps.robot.quizgenerator.domain.ImageUploadDelegate
@@ -42,5 +43,8 @@ fun appModule() = module {
     }
     viewModel {
         CreateQuestionWithOptionsViewModel(repository = get(), imageUploadDelegate = get())
+    }
+    viewModel {
+        CreateQuizRoundViewModel(repository = get(), imageUploadDelegate = get())
     }
 }

@@ -15,5 +15,5 @@ data class OpenQuestion(
 ) :  QuestionModel() {
 
     override val type: String
-        get() = "OpenQuestion"
+        get() = QuestionType.OpenQuestion.name
 }

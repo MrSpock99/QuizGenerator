@@ -2,7 +2,6 @@ package apps.robot.quizgenerator.createquiz.questionlist
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,8 +35,10 @@ import apps.robot.quizgenerator.createquiz.main.presentation.QuizInfoViewModel
 import apps.robot.quizgenerator.domain.OpenQuestion
 import apps.robot.quizgenerator.domain.QuestionModel
 import apps.robot.quizgenerator.domain.QuestionWithOptions
+import apps.robot.quizgenerator.domain.QuizRound
 import apps.robot.quizgenerator.presentation.CreateOpenQuestionScreen
 import apps.robot.quizgenerator.presentation.CreateQuestionWithOptionsScreen
+import apps.robot.quizgenerator.presentation.CreateRoundScreen
 
 @Composable
 fun QuizQuestionList(
@@ -49,17 +50,18 @@ fun QuizQuestionList(
         mutableStateOf(false)
     }
 
-    /*LaunchedEffect(key1 = Unit) {
+   /* LaunchedEffect(key1 = Unit) {
         viewModel.onResume()
-
     }*/
     if (openDialog.value) {
         CreateQuestionDialog(onCreateOpenQuestionClick = {
             navController.navigate(CreateOpenQuestionScreen(quizId = state.quizId, questionId = null))
         }, onCreateQuestionWithOptionsClick = {
             navController.navigate(CreateQuestionWithOptionsScreen(quizId = state.quizId, questionId = null))
+        }, onCreateRoundClick = {
+            navController.navigate(CreateRoundScreen(quizId = state.quizId, roundId = null))
         }, onDismissRequest = {
-
+            navController.popBackStack()
         })
     }
     Box(modifier = Modifier.fillMaxSize()) {
@@ -94,6 +96,22 @@ fun QuizQuestionList(
                                     )
                                 )
                             })
+                    }
+
+                    is QuizRound -> {
+                        Row(
+                            modifier = Modifier.clickable {
+                                navController.navigate(
+                                    CreateRoundScreen(
+                                        quizId = state.quizId,
+                                        roundId = question.id
+                                    )
+                                )
+                            }
+                        ) {
+                            Text(text = index.toString())
+                            Text(text = question.title)
+                        }
                     }
                 }
 
@@ -161,7 +179,8 @@ fun QuestionWithOptionsItem(
 fun CreateQuestionDialog(
     onDismissRequest: () -> Unit,
     onCreateOpenQuestionClick: () -> Unit,
-    onCreateQuestionWithOptionsClick: () -> Unit
+    onCreateQuestionWithOptionsClick: () -> Unit,
+    onCreateRoundClick: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -181,9 +200,9 @@ fun CreateQuestionDialog(
         },
         confirmButton = {},
         dismissButton = {
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
                     onClick = onCreateOpenQuestionClick,
@@ -195,6 +214,11 @@ fun CreateQuestionDialog(
                     onClick = onCreateQuestionWithOptionsClick
                 ) {
                     Text(text = "Question with options")
+                }
+                Button(
+                    onClick = onCreateRoundClick
+                ) {
+                    Text(text = "Question round")
                 }
             }
         }

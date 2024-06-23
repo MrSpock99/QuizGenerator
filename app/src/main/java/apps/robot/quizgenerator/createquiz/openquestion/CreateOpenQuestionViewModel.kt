@@ -99,7 +99,6 @@ class CreateOpenQuestionViewModel(
                 answerImage = answerImage,
                 quizId = quizId!!,
                 questionText = currentState.questionText,
-
             )
             val questionImagePath = imagesPaths.questionPath
             val answerImagePath = imagesPaths.answerPath

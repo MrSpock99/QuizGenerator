@@ -14,16 +14,15 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.modules.SerializersModule
 
 @Serializable(with = QuestionModel.Serializer::class)
-sealed class QuestionModel() {
-    abstract val id: String
-    abstract val text: String
-    abstract val image: String?
-    abstract val voiceover: String?
-    abstract val type: String
-    abstract val points: Int
-    abstract val duration: Int
-    abstract val answerImage: String?
-
+sealed class QuestionModel {
+    open val id: String = ""
+    open val text: String = ""
+    open val image: String? = ""
+    open val voiceover: String? = ""
+    open val type: String = ""
+    open val points: Int = 0
+    open val duration: Int = 0
+    open val answerImage: String? = ""
 
     object Serializer : KSerializer<QuestionModel> {
 
@@ -34,9 +33,11 @@ sealed class QuestionModel() {
             prettyPrint = true
             coerceInputValues = true
             classDiscriminator = "type"
+            explicitNulls = false
             serializersModule = SerializersModule {
                 polymorphic(QuestionModel::class, OpenQuestion::class, OpenQuestion.serializer())
                 polymorphic(QuestionModel::class, QuestionWithOptions::class, QuestionWithOptions.serializer())
+                polymorphic(QuestionModel::class, QuizRound::class, QuizRound.serializer())
             }
         }
         override val descriptor: SerialDescriptor
@@ -45,16 +46,24 @@ sealed class QuestionModel() {
             when (value) {
                 is OpenQuestion -> encoder.encodeSerializableValue(OpenQuestion.serializer(), value)
                 is QuestionWithOptions -> encoder.encodeSerializableValue(QuestionWithOptions.serializer(), value)
+                is QuizRound -> encoder.encodeSerializableValue(QuizRound.serializer(), value)
             }
         }
 
         override fun deserialize(decoder: Decoder): QuestionModel {
             val jsonElement = (decoder as JsonDecoder).decodeJsonElement()
             return when (val itemType = jsonElement.jsonObject["type"]?.jsonPrimitive?.content) {
-                "OpenQuestion" -> json.decodeFromJsonElement(OpenQuestion.serializer(), jsonElement)
-                "QuestionWithOptions" -> json.decodeFromJsonElement(QuestionWithOptions.serializer(), jsonElement)
+                QuestionType.OpenQuestion.name -> json.decodeFromJsonElement(OpenQuestion.serializer(), jsonElement)
+                QuestionType.QuestionWithOptions.name -> json.decodeFromJsonElement(
+                    QuestionWithOptions.serializer(), jsonElement)
+                QuestionType.Round.name -> json.decodeFromJsonElement(
+                    QuizRound.serializer(), jsonElement)
                 else -> throw SerializationException("Unknown itemType: $itemType")
             }
         }
+    }
+    @Serializable
+    enum class QuestionType {
+        OpenQuestion, QuestionWithOptions, Round, None
     }
 }

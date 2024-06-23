@@ -17,5 +17,5 @@ data class QuestionWithOptions(
     QuestionModel() {
 
     override val type: String
-        get() = "QuestionWithOptions"
+        get() = QuestionType.QuestionWithOptions.name
 }

@@ -9,6 +9,7 @@ import apps.robot.quizgenerator.domain.QuestionModel
 import apps.robot.quizgenerator.domain.QuestionWithOptions
 import apps.robot.quizgenerator.domain.QuizModel
 import apps.robot.quizgenerator.domain.QuizRepository
+import apps.robot.quizgenerator.domain.QuizRound
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
@@ -244,7 +245,7 @@ class QuizRepositoryImpl(
                         duration = it["duration"]?.toString()?.toInt() ?: 30,
                         answerImage = answerImagePath
                     )
-                } else {
+                } else if (it.get("options") != null) {
                     QuestionWithOptions(
                         id = it["id"].toString(),
                         text = it["text"].toString(),
@@ -255,6 +256,13 @@ class QuizRepositoryImpl(
                         points = it["points"]?.toString()?.toInt() ?: 1,
                         duration = it["duration"]?.toString()?.toInt() ?: 30,
                         answerImage = answerImagePath
+                    )
+                } else {
+                    QuizRound(
+                        id = it["id"].toString(),
+                        text = it["text"].toString(),
+                        title = it["title"].toString(),
+                        image = questionImagePath
                     )
                 }
                 question
