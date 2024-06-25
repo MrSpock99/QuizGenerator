@@ -16,7 +16,7 @@ class ImageUploadDelegate(
         quizId: String,
         questionText: String,
     ): ImagePaths = withContext(Dispatchers.IO) {
-        val questionImagePathJob = if (questionImage != null && questionImage.scheme != "https") {
+        val questionImagePathJob = if (questionImage != null && questionImage?.scheme != "https") {
             async {
                 uploadManager.uploadFileFromUri(
                     quizId = quizId,
@@ -25,6 +25,10 @@ class ImageUploadDelegate(
                     uri = questionImage,
                     type = "question_image",
                 )
+            }
+        } else if (questionImage?.scheme == "https") {
+            async {
+                questionImage.toString()
             }
         } else {
             null
@@ -39,6 +43,10 @@ class ImageUploadDelegate(
                     uri = answerImage,
                     type = "answer_image",
                 )
+            }
+        } else if (answerImage?.scheme == "https") {
+            async {
+                answerImage.toString()
             }
         } else {
             null
