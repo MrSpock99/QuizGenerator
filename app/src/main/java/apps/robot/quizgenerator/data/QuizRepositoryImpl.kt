@@ -75,7 +75,6 @@ class QuizRepositoryImpl(
                     .get()
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
-                            launch {
                                 val quizMap = it.result.data!!
                                 val list = getQuestions(quizMap, true)
 
@@ -96,7 +95,6 @@ class QuizRepositoryImpl(
                                     .addOnCompleteListener {
                                         emitter.resume(it.isSuccessful)
                                     }
-                            }
                         }
                     }
             }
@@ -151,7 +149,7 @@ class QuizRepositoryImpl(
                         if (it.isSuccessful) {
                             launch {
                                 val quizMap = it.result.data!!
-                                val list = getQuestions(quizMap,true)
+                                val list = getQuestions(quizMap, true)
 
                                 val quizModel = QuizModel(
                                     id = quizMap.get("id").toString(),
@@ -213,63 +211,70 @@ class QuizRepositoryImpl(
         }
     }
 
-    private suspend fun getQuestions(quizMap: Map<String, Any>, getDownloadUrls: Boolean = true): List<QuestionModel?> = withContext(Dispatchers.IO) {
-            val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
-                val questionImagePath = it["image"]?.toString()
-                val answerImagePath = it["answerImage"]?.toString()
-             /*   val questionImageRefJob = if (questionImagePath != "null" && questionImagePath.isNotBlank() && getDownloadUrls) {
-                    async {
-                        getDownloadUrl(storage.reference.child(questionImagePath).downloadUrl)
-                    }
-                } else {
-                    null
-                }
-                val answerImageRefJob = if (answerImagePath != "null" && answerImagePath.isNotBlank() && getDownloadUrls) {
-                    async {
-                        getDownloadUrl(storage.reference.child(answerImagePath).downloadUrl)
-                    }
-                } else {
-                    null
-                }
-                val questionImageRef = questionImageRefJob?.await()
-                val answerImageRef = answerImageRefJob?.await()*/
+    private fun getQuestions(quizMap: Map<String, Any>, getDownloadUrls: Boolean = true): List<QuestionModel?> {
+        val list = (quizMap.get("list") as ArrayList<HashMap<String, Any>>).map {
+            val questionImagePath = it["image"]?.toString()
+            val answerImagePath = it["answerImage"]?.toString()
+            /*   val questionImageRefJob = if (questionImagePath != "null" && questionImagePath.isNotBlank() && getDownloadUrls) {
+                       async {
+                           getDownloadUrl(storage.reference.child(questionImagePath).downloadUrl)
+                       }
+                   } else {
+                       null
+                   }
+                   val answerImageRefJob = if (answerImagePath != "null" && answerImagePath.isNotBlank() && getDownloadUrls) {
+                       async {
+                           getDownloadUrl(storage.reference.child(answerImagePath).downloadUrl)
+                       }
+                   } else {
+                       null
+                   }
+                   val questionImageRef = questionImageRefJob?.await()
+                   val answerImageRef = answerImageRefJob?.await()*/
 
-                val question = if (it.get("answer") != null) {
-                    OpenQuestion(
-                        id = it["id"].toString(),
-                        text = it["text"].toString(),
-                        answer = it["answer"] as ArrayList<String>,
-                        voiceover = it["voiceover"].toString(),
-                        image = questionImagePath,
-                        points = it["points"]?.toString()?.toInt() ?: 1,
-                        duration = it["duration"]?.toString()?.toInt() ?: 30,
-                        answerImage = answerImagePath
-                    )
-                } else if (it.get("options") != null) {
-                    QuestionWithOptions(
-                        id = it["id"].toString(),
-                        text = it["text"].toString(),
-                        options = it["options"] as ArrayList<String>,
-                        rightAnswerIndex = (it["rightAnswerIndex"] as Long).toInt(),
-                        voiceover = it["voiceover"].toString(),
-                        image = questionImagePath,
-                        points = it["points"]?.toString()?.toInt() ?: 1,
-                        duration = it["duration"]?.toString()?.toInt() ?: 30,
-                        answerImage = answerImagePath
-                    )
-                } else {
-                    QuizRound(
-                        id = it["id"].toString(),
-                        text = it["text"].toString(),
-                        title = it["title"].toString(),
-                        image = questionImagePath
-                    )
-                }
-                question
+            val question = if (it.get("answer") != null) {
+                OpenQuestion(
+                    id = it["id"].toString(),
+                    text = it["text"].toString(),
+                    answer = it["answer"] as ArrayList<String>,
+                    voiceover = it["voiceover"].toString(),
+                    image = questionImagePath,
+                    points = it["points"]?.toString()?.toInt() ?: 1,
+                    duration = it["duration"]?.toString()?.toInt() ?: 30,
+                    answerImage = answerImagePath,
+                    questionAudio = it["questionAudio"]?.toString(),
+                    answerAudio = it["answerAudio"]?.toString(),
+                    questionVideo = it["questionVideo"]?.toString(),
+                    answerVideo = it["answerVideo"]?.toString()
+                )
+            } else if (it.get("options") != null) {
+                QuestionWithOptions(
+                    id = it["id"].toString(),
+                    text = it["text"].toString(),
+                    options = it["options"] as ArrayList<String>,
+                    rightAnswerIndex = (it["rightAnswerIndex"] as Long).toInt(),
+                    voiceover = it["voiceover"].toString(),
+                    image = questionImagePath,
+                    points = it["points"]?.toString()?.toInt() ?: 1,
+                    duration = it["duration"]?.toString()?.toInt() ?: 30,
+                    answerImage = answerImagePath,
+                    questionAudio = it["questionAudio"]?.toString(),
+                    answerAudio = it["answerAudio"]?.toString(),
+                    questionVideo = it["questionVideo"]?.toString(),
+                    answerVideo = it["answerVideo"]?.toString()
+                )
+            } else {
+                QuizRound(
+                    id = it["id"].toString(),
+                    text = it["text"].toString(),
+                    title = it["title"].toString(),
+                    image = questionImagePath
+                )
             }
-            //continuation.resume(list)
-        return@withContext list
+            question
         }
+        return list
+    }
 
     override suspend fun getDownloadUrl(path: String?): Uri? = suspendCancellableCoroutine { continuation ->
         if (path.isNullOrBlank()) {

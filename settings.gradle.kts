@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "QuizGenerator"
 include(":app")
- 
+include(":quiz-common")

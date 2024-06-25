@@ -17,7 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import apps.robot.quizgenerator.createquiz.presentation.CustomTextField
+import apps.robot.quizgenerator.createquiz.main.presentation.CustomTextField
 import coil.compose.rememberAsyncImagePainter
 import org.koin.androidx.compose.get
 

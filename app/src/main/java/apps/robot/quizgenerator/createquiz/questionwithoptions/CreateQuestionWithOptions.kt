@@ -41,8 +41,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import apps.robot.quizgenerator.R
-import apps.robot.quizgenerator.createquiz.main.presentation.QuestionUiState
-import apps.robot.quizgenerator.createquiz.presentation.CustomTextField
+import apps.robot.quizgenerator.createquiz.base.CreateQuestionViewModel
+import apps.robot.quizgenerator.createquiz.main.presentation.CustomTextField
 import coil.compose.rememberAsyncImagePainter
 import org.koin.androidx.compose.getViewModel
 
@@ -64,20 +64,27 @@ fun CreateQuestionWithOptions(
         Log.d("TAG", "URI: $uri")
         viewModel.onAnswerImageSelected(uri!!)
     }
-
+    val questionAudioLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        Log.d("TAG", "URI: $uri")
+        viewModel.onQuestionAudioSelected(uri!!)
+    }
+    val answerAudioLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        Log.d("TAG", "URI: $uri")
+        viewModel.onAnswerAudioSelected(uri!!)
+    }
     LaunchedEffect(key1 = Unit) {
         viewModel.onReceiveArgs(quizId, questionId)
     }
 
     when (state) {
-        QuestionUiState.Loading -> {
+        CreateQuestionViewModel.QuestionUiState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(modifier = Modifier.size(100.dp))
             }
         }
 
-        is QuestionUiState.QuestionWithOptionsUiState -> {
-            val currentState = state as QuestionUiState.QuestionWithOptionsUiState
+        is CreateQuestionViewModel.QuestionUiState.QuestionWithOptionsUiState -> {
+            val currentState = state as CreateQuestionViewModel.QuestionUiState.QuestionWithOptionsUiState
             Scaffold(
                 topBar = {
                     TopAppBar(
@@ -142,7 +149,7 @@ fun CreateQuestionWithOptions(
                             modifier = Modifier.fillMaxWidth(),
                             label = "Question points",
                             onChange = { viewModel.onQuestionPointsChange(it) },
-                            text = state.points.toString(),
+                            text = currentState.points.toString(),
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Next,
                                 keyboardType = KeyboardType.Number
@@ -152,7 +159,7 @@ fun CreateQuestionWithOptions(
                             modifier = Modifier.fillMaxWidth(),
                             label = "Question duration",
                             onChange = { viewModel.onQuestionDurationChange(it) },
-                            text = state.duration.toString(),
+                            text = currentState.duration.toString(),
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Next,
                                 keyboardType = KeyboardType.Number
@@ -160,7 +167,7 @@ fun CreateQuestionWithOptions(
                         )
                         Image(
                             modifier = Modifier.size(100.dp),
-                            painter = rememberAsyncImagePainter(state.questionImage),
+                            painter = rememberAsyncImagePainter(currentState.questionImage),
                             contentDescription = "My Image"
                         )
                         Button(onClick = {
@@ -171,7 +178,7 @@ fun CreateQuestionWithOptions(
                         }
                         Image(
                             modifier = Modifier.size(100.dp),
-                            painter = rememberAsyncImagePainter(state.answerImage, onState = {
+                            painter = rememberAsyncImagePainter(currentState.answerImage, onState = {
                                 Log.d("MYTAG", "Image state: $it")
                             }),
                             contentDescription = "My Image"
@@ -182,12 +189,73 @@ fun CreateQuestionWithOptions(
                             val text = "Answer image"
                             Text(text = text)
                         }
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = currentState.questionAudio.toString().take(10)
+                            )
+                            if (currentState.questionAudio != null) {
+                                val btnState = currentState.playAudioState
+                                Button(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        if (btnState == CreateQuestionViewModel.QuestionUiState.AudioState.Paused) {
+                                            viewModel.onPlayAudioClicked(currentState.questionAudio)
+                                        } else {
+                                            viewModel.onStopAudioClicked()
+                                        }
+                                    }) {
+                                    Text("Play/Stop audio")
+                                }
+                            }
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    questionAudioLauncher.launch("audio/*")
+                                }) {
+                                val text = "Question audio"
+                                Text(text = text)
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = currentState.answerAudio.toString().take(10)
+                            )
+                            if (currentState.answerAudio != null) {
+                                val btnState = currentState.playAudioState
+                                Button(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        if (btnState == CreateQuestionViewModel.QuestionUiState.AudioState.Paused) {
+                                            viewModel.onPlayAudioClicked(currentState.answerAudio)
+                                        } else {
+                                            viewModel.onStopAudioClicked()
+                                        }
+                                    }) {
+                                    Text("Play/Stop audio")
+                                }
+                            }
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    answerAudioLauncher.launch("audio/*")
+                                }) {
+                                val text = "Answer audio"
+                                Text(text = text)
+                            }
+                        }
+
                         Button(onClick = {
                             viewModel.onCreateQuestionClick {
                                 navController.popBackStack()
                             }
                         }) {
-                            val text = if (state.isUpdatingQuestion) {
+                            val text = if (currentState.isUpdatingQuestion) {
                                 "Update"
                             } else {
                                 "Create"

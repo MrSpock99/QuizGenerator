@@ -8,9 +8,11 @@ import apps.robot.quizgenerator.createquiz.questionwithoptions.CreateQuestionWit
 import apps.robot.quizgenerator.createquiz.round.CreateQuizRoundViewModel
 import apps.robot.quizgenerator.data.QuizRepositoryImpl
 import apps.robot.quizgenerator.data.UploadManager
+import apps.robot.quizgenerator.domain.AudioUploadDelegate
 import apps.robot.quizgenerator.domain.ImageUploadDelegate
 import apps.robot.quizgenerator.domain.QuizRepository
 import apps.robot.quizgenerator.quizlist.presentation.QuizListViewModel
+import apps.robot.quizgenerator.utils.AudioPlayer
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import org.koin.android.ext.koin.androidApplication
@@ -31,6 +33,14 @@ fun appModule() = module {
     factory {
         ImageUploadDelegate(uploadManager = get())
     }
+    factory {
+        AudioUploadDelegate(
+            uploadManager = get()
+        )
+    }
+    factory {
+        AudioPlayer(androidContext())
+    }
 
     viewModel {
         QuizListViewModel(get())
@@ -39,10 +49,20 @@ fun appModule() = module {
         QuizInfoViewModel(repository = get(), context = androidApplication())
     }
     viewModel {
-        CreateOpenQuestionViewModel(repository = get(), imageUploadDelegate = get())
+        CreateOpenQuestionViewModel(
+            repository = get(),
+            imageUploadDelegate = get(),
+            audioUploadDelegate = get(),
+            audioPlayer = get()
+        )
     }
     viewModel {
-        CreateQuestionWithOptionsViewModel(repository = get(), imageUploadDelegate = get())
+        CreateQuestionWithOptionsViewModel(
+            repository = get(),
+            imageUploadDelegate = get(),
+            audioUploadDelegate = get(),
+            audioPlayer = get()
+        )
     }
     viewModel {
         CreateQuizRoundViewModel(repository = get(), imageUploadDelegate = get())

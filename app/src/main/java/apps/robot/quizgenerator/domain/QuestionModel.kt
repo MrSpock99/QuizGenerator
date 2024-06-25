@@ -22,7 +22,11 @@ sealed class QuestionModel {
     open val type: String = ""
     open val points: Int = 0
     open val duration: Int = 0
-    open val answerImage: String? = ""
+    open val answerImage: String? = null
+    open val questionAudio: String? = null
+    open val questionVideo: String? = null
+    open val answerAudio: String? = null
+    open val answerVideo: String? = null
 
     object Serializer : KSerializer<QuestionModel> {
 

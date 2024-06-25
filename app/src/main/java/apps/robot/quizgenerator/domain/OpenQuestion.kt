@@ -12,6 +12,10 @@ data class OpenQuestion(
     override val points: Int,
     override val duration: Int,
     override val answerImage: String?,
+    override val questionAudio: String?,
+    override val questionVideo: String?,
+    override val answerAudio: String?,
+    override val answerVideo: String?,
 ) :  QuestionModel() {
 
     override val type: String

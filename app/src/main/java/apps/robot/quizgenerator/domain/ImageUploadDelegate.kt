@@ -20,7 +20,7 @@ class ImageUploadDelegate(
             async {
                 uploadManager.uploadFileFromUri(
                     quizId = quizId,
-                    fileType = "image",
+                    contentType = UploadManager.ContentType.Image,
                     questionId = "question_$questionText",
                     uri = questionImage,
                     type = "question_image",
@@ -34,7 +34,7 @@ class ImageUploadDelegate(
             async {
                 uploadManager.uploadFileFromUri(
                     quizId = quizId,
-                    fileType = "image",
+                    contentType = UploadManager.ContentType.Image,
                     questionId = "question_$questionText",
                     uri = answerImage,
                     type = "answer_image",

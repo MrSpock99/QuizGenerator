@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package apps.robot.quizgenerator.createquiz.presentation
+package apps.robot.quizgenerator.createquiz.main.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

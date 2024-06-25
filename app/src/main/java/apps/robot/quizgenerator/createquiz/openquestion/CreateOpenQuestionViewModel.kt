@@ -1,34 +1,25 @@
 package apps.robot.quizgenerator.createquiz.openquestion
 
-import android.net.Uri
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import apps.robot.quizgenerator.createquiz.main.presentation.QuestionUiState
+import apps.robot.quizgenerator.createquiz.base.CreateQuestionViewModel
+import apps.robot.quizgenerator.domain.AudioUploadDelegate
 import apps.robot.quizgenerator.domain.ImageUploadDelegate
 import apps.robot.quizgenerator.domain.OpenQuestion
 import apps.robot.quizgenerator.domain.QuizRepository
+import apps.robot.quizgenerator.utils.AudioPlayer
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 class CreateOpenQuestionViewModel(
     private val repository: QuizRepository,
-    private val imageUploadDelegate: ImageUploadDelegate
-) : ViewModel() {
+    private val imageUploadDelegate: ImageUploadDelegate,
+    private val audioUploadDelegate: AudioUploadDelegate,
+    private val audioPlayer: AudioPlayer
+) : CreateQuestionViewModel(repository, imageUploadDelegate, audioUploadDelegate, audioPlayer) {
 
-    var state: MutableStateFlow<QuestionUiState> =
-        MutableStateFlow(
-            QuestionUiState.Loading
-        )
-        private set
-
-    private var questionId: String? = null
-    private var questionModel: OpenQuestion? = null
-    private var quizId: String? = null
-
-    fun onReceiveArgs(id: String, questionId: String?) {
+    override fun onReceiveArgs(id: String, questionId: String?) {
         viewModelScope.launch(Dispatchers.IO) {
             val quiz = repository.getQuizModel(id)
             this@CreateOpenQuestionViewModel.questionId = questionId
@@ -37,7 +28,7 @@ class CreateOpenQuestionViewModel(
             val question = quiz.list.find { it?.id == questionId } as? OpenQuestion
             questionModel = question
 
-            state.value = QuestionUiState.OpenQuestionUiState(
+            _state.value = QuestionUiState.OpenQuestionUiState(
                 questionText = question?.text.orEmpty(),
                 answers = question?.answer.orEmpty(),
                 isUpdatingQuestion = question != null,
@@ -45,17 +36,15 @@ class CreateOpenQuestionViewModel(
                 points = (question?.points ?: 1).toString(),
                 answerImage = (question?.answerImage)?.toUri(),
                 questionImage = (question?.image)?.toUri(),
-                currentAnswer = ""
+                currentAnswer = "",
+                questionAudio = question?.questionAudio?.toUri(),
+                questionVideo = question?.questionVideo?.toUri(),
+                answerAudio = question?.answerAudio?.toUri(),
+                answerVideo = question?.answerVideo?.toUri(),
+                playAudioState = QuestionUiState.AudioState.Paused
             )
         }
 
-    }
-
-    fun onQuestionTextChange(text: String) {
-        val currentState = state.value
-        if (currentState is QuestionUiState.OpenQuestionUiState) {
-            state.value = currentState.copy(questionText = text)
-        }
     }
 
     fun onQuestionAnswerAdd(text: String) {
@@ -63,7 +52,7 @@ class CreateOpenQuestionViewModel(
         if (currentState is QuestionUiState.OpenQuestionUiState) {
             val old = currentState.answers.toMutableList()
             old.add(text.trim().lowercase())
-            state.value = currentState.copy(answers = old)
+            _state.value = currentState.copy(answers = old)
         }
 
     }
@@ -71,79 +60,58 @@ class CreateOpenQuestionViewModel(
     fun onQuestionAnswerChange(text: String) {
         val currentState = state.value
         if (currentState is QuestionUiState.OpenQuestionUiState) {
-            state.value = currentState.copy(currentAnswer = text)
+            _state.value = currentState.copy(currentAnswer = text)
         }
     }
 
-    fun onQuestionPointsChange(text: String) {
-        val points = runCatching {
-            text.trim().toInt()
-        }.getOrDefault(0).toString()
-
-        val currentState = state.value
-        if (currentState is QuestionUiState.OpenQuestionUiState) {
-            state.value = currentState.copy(points = points)
-        }
-    }
-
-    fun onCreateQuestionClick(onDone: () -> Unit) {
+    override fun onCreateQuestionClick(onDone: () -> Unit) {
         viewModelScope.launch {
-            val questionImage = state.value.questionImage
-            val answerImage = state.value.answerImage
             val currentState = state.value
 
-            state.value = QuestionUiState.Loading
-
-            val imagesPaths = imageUploadDelegate.upload(
-                questionImage = questionImage,
-                answerImage = answerImage,
-                quizId = quizId!!,
-                questionText = currentState.questionText,
-            )
-            val questionImagePath = imagesPaths.questionPath
-            val answerImagePath = imagesPaths.answerPath
-
-            val quizId = quizId!!
             if (currentState is QuestionUiState.OpenQuestionUiState) {
-                if (currentState.isUpdatingQuestion) {
-                    var model = questionModel?.copy(
-                        text = currentState.questionText.trim(),
-                        answer = currentState.answers,
-                        duration = currentState.duration.trim().toInt(),
-                        points = currentState.points.trim().toInt(),
-                    )!!
-                    if (questionImagePath != null) {
-                        model = model.copy(
-                            image = questionImagePath,
-                        )
-                    }
-                    if (answerImagePath != null) {
-                        model = model.copy(
-                            answerImage = answerImagePath
-                        )
-                    }
-                    val job = viewModelScope.launch(Dispatchers.IO) {
-                        repository.updateQuestion(quizId, model)
-                    }
-                    job.join()
-                    onDone()
+                val questionImage = currentState.questionImage
+                val answerImage = currentState.answerImage
+                val questionAudio = currentState.questionAudio
+                val answerAudio = currentState.answerAudio
+
+                _state.value = QuestionUiState.Loading
+
+                val imagesPaths = imageUploadDelegate.upload(
+                    questionImage = questionImage,
+                    answerImage = answerImage,
+                    quizId = quizId!!,
+                    questionText = currentState.questionText,
+                )
+                val audioPaths = audioUploadDelegate.upload(
+                    questionAudio = questionAudio,
+                    answerAudio = answerAudio,
+                    quizId = quizId!!,
+                    questionText = currentState.questionText
+                )
+                val questionImagePath = imagesPaths.questionPath
+                val answerImagePath = imagesPaths.answerPath
+
+                val quizId = quizId!!
+                val model = OpenQuestion(
+                    id = questionModel?.id ?: UUID.randomUUID().toString(),
+                    text = currentState.questionText.trim(),
+                    answer = currentState.answers,
+                    voiceover = null,
+                    points = currentState.points.trim().toInt(),
+                    duration = currentState.duration.trim().toInt(),
+                    image = questionImagePath,
+                    answerImage = answerImagePath,
+                    questionAudio = audioPaths.questionPath,
+                    answerAudio = audioPaths.answerPath,
+                    questionVideo = null,
+                    answerVideo = null
+                )
+                if (questionModel == null) {
+                    repository.addQuestion(quizId, model)
                 } else {
-                    val model = OpenQuestion(
-                        id = UUID.randomUUID().toString(),
-                        text = currentState.questionText.trim(),
-                        answer = currentState.answers,
-                        voiceover = null,
-                        points = currentState.points.trim().toInt(),
-                        duration = currentState.duration.trim().toInt(),
-                        image = questionImagePath,
-                        answerImage = answerImagePath
-                    )
-                    val job = viewModelScope.launch(Dispatchers.IO) {
-                        repository.addQuestion(quizId, model)
-                    }
-                    job.join()
-                    onDone()
+                    repository.updateQuestion(quizId, model)
                 }
+                onDone()
             }
         }
     }
@@ -153,36 +121,7 @@ class CreateOpenQuestionViewModel(
         if (currentState is QuestionUiState.OpenQuestionUiState) {
             val old = currentState.answers.toMutableList()
             old.remove(answer)
-            state.value = currentState.copy(answers = old)
-        }
-    }
-
-    fun onQuestionDurationChange(text: String) {
-        val duration = runCatching {
-            text.trim().toInt()
-        }.getOrDefault(0).toString()
-        val currentState = state.value
-        if (currentState is QuestionUiState.OpenQuestionUiState) {
-            state.value = currentState.copy(duration = duration)
-        }
-    }
-
-    fun onQuestionImageSelected(uri: Uri) {
-        val currentState = state.value
-        if (currentState is QuestionUiState.OpenQuestionUiState) {
-            state.value = currentState.copy(
-                questionImage = uri
-            )
-        }
-
-    }
-
-    fun onAnswerImageSelected(uri: Uri) {
-        val currentState = state.value
-        if (currentState is QuestionUiState.OpenQuestionUiState) {
-            state.value = currentState.copy(
-                answerImage = uri
-            )
+            _state.value = currentState.copy(answers = old)
         }
     }
 }

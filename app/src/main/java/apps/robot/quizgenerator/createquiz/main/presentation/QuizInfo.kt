@@ -14,7 +14,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import apps.robot.quizgenerator.createquiz.presentation.CustomTextField
 
 @Composable
 fun QuizInfo(quizId: String?, viewModel: QuizInfoViewModel) {

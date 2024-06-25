@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import apps.robot.quizgenerator.domain.UploadModel
+import apps.robot.quizgenerator.utils.ContentTypeAdapter
 import apps.robot.quizgenerator.utils.UriDeserializer
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
@@ -22,6 +23,7 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) : Corout
 
         val gson = GsonBuilder()
             .registerTypeAdapter(Uri::class.java, UriDeserializer())
+            .registerTypeAdapter(UploadManager.ContentType::class.java, ContentTypeAdapter())
             .create()
         val data = gson.fromJson(
             inputData.getString("upload_model"),
@@ -29,22 +31,20 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) : Corout
         )
         val storage = Firebase.storage
         var storageRef = storage.reference
-        val path = "${data.quizId}/${data.questionId}/${data.fileType}/${data.type}"
+        val contentType = when (data.contentType) {
+            UploadManager.ContentType.Image -> "image"
+            UploadManager.ContentType.Audio -> "audio"
+        }
+        val path = "${data.quizId}/${data.questionId}/${contentType}/${data.type}"
         var imagesRef: StorageReference? =
             storageRef.child(
                 path
             )
 
-        val uploadTask = imagesRef?.putFile(data.uri)
+        val uploadTask = imagesRef
+            ?.putFile(data.uri)
         uploadTask?.await()
 
-      /*  uploadTask?.addOnSuccessListener {
-            return@addOnSuccessListener Result.success(Data.Builder().putString("path", path).build())
-
-            //continuation.resume(Result.success(Data.Builder().putString("path", path).build()))
-        }?.addOnFailureListener {
-            continuation.resumeWithException(it)
-        }*/
         return Result.success(Data.Builder().putString("path", getDownloadUrl(imagesRef).toString()).build())
     }
 

@@ -1,22 +1,23 @@
 package apps.robot.quizgenerator.createquiz.questionwithoptions
 
-import android.net.Uri
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import apps.robot.quizgenerator.createquiz.main.presentation.QuestionUiState
+import apps.robot.quizgenerator.createquiz.base.CreateQuestionViewModel
+import apps.robot.quizgenerator.domain.AudioUploadDelegate
 import apps.robot.quizgenerator.domain.ImageUploadDelegate
 import apps.robot.quizgenerator.domain.QuestionWithOptions
 import apps.robot.quizgenerator.domain.QuizRepository
+import apps.robot.quizgenerator.utils.AudioPlayer
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 class CreateQuestionWithOptionsViewModel(
     private val repository: QuizRepository,
-    private val imageUploadDelegate: ImageUploadDelegate
-) : ViewModel() {
+    private val imageUploadDelegate: ImageUploadDelegate,
+    private val audioUploadDelegate: AudioUploadDelegate,
+    private val audioPlayer: AudioPlayer
+) : CreateQuestionViewModel(repository, imageUploadDelegate, audioUploadDelegate, audioPlayer) {
 
     private val defaultOptions = listOf(
         "",
@@ -24,14 +25,8 @@ class CreateQuestionWithOptionsViewModel(
         "",
         ""
     )
-    val state: MutableStateFlow<QuestionUiState> = MutableStateFlow(
-        QuestionUiState.Loading
-    )
 
-    private var quizId: String? = null
-    private var questionModel: QuestionWithOptions? = null
-
-    fun onReceiveArgs(quizId: String, questionId: String?) {
+    override fun onReceiveArgs(quizId: String, questionId: String?) {
         this.quizId = quizId
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -39,7 +34,7 @@ class CreateQuestionWithOptionsViewModel(
             val question = quizModel.list.find { it?.id == questionId } as? QuestionWithOptions
             this@CreateQuestionWithOptionsViewModel.questionModel = question
 
-            state.value = QuestionUiState.QuestionWithOptionsUiState(
+            _state.value = QuestionUiState.QuestionWithOptionsUiState(
                 questionText = question?.text.orEmpty(),
                 answers = question?.options ?: defaultOptions,
                 isUpdatingQuestion = question != null,
@@ -48,56 +43,66 @@ class CreateQuestionWithOptionsViewModel(
                 points = (question?.points ?: 1).toString(),
                 answerImage = (question?.answerImage)?.toUri(),
                 questionImage = (question?.image)?.toUri(),
+                questionAudio = question?.questionAudio?.toUri(),
+                questionVideo = question?.questionVideo?.toUri(),
+                answerAudio = question?.answerAudio?.toUri(),
+                answerVideo = question?.answerVideo?.toUri(),
+                playAudioState = QuestionUiState.AudioState.Paused
             )
         }
     }
 
-    fun onQuestionTextChange(text: String) {
-        val currentState = state.value
-        if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
-            state.value = currentState.copy(questionText = text)
-        }
-    }
 
-    fun onQuestionPointsChange(text: String) {
-        val points = runCatching {
-            text.trim().toInt()
-        }.getOrDefault(0)
-
-        val currentState = state.value
-        if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
-            state.value = currentState.copy(points = points.toString())
-        }
-    }
-    fun onQuestionDurationChange(text: String) {
-        val duration = runCatching {
-            text.trim().toInt()
-        }.getOrDefault(0)
-
-        val currentState = state.value
-        if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
-            state.value = currentState.copy(duration = duration.toString())
-        }
-    }
-
-    fun onCreateQuestionClick(onDone: () -> Unit) {
+    override fun onCreateQuestionClick(onDone: () -> Unit) {
         viewModelScope.launch {
             val currentState = state.value
-            state.value = QuestionUiState.Loading
+            _state.value = QuestionUiState.Loading
             if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
                 val questionImage = currentState.questionImage
                 val answerImage = currentState.answerImage
+                val questionAudio = currentState.questionAudio
+                val answerAudio = currentState.answerAudio
+
+                _state.value = QuestionUiState.Loading
 
                 val imagesPaths = imageUploadDelegate.upload(
                     questionImage = questionImage,
                     answerImage = answerImage,
                     quizId = quizId!!,
                     questionText = currentState.questionText,
-                    )
+                )
+                val audioPaths = audioUploadDelegate.upload(
+                    questionAudio = questionAudio,
+                    answerAudio = answerAudio,
+                    quizId = quizId!!,
+                    questionText = currentState.questionText
+                )
                 val questionImagePath = imagesPaths.questionPath
                 val answerImagePath = imagesPaths.answerPath
 
-                if (currentState.isUpdatingQuestion) {
+                val quizId = quizId!!
+
+                val model = QuestionWithOptions(
+                    id = questionModel?.id ?: UUID.randomUUID().toString(),
+                    text = currentState.questionText.trim(),
+                    options = currentState.answers,
+                    rightAnswerIndex = currentState.rightAnswerIndex,
+                    image = questionImagePath,
+                    voiceover = null,
+                    points = currentState.points.toIntOrNull() ?: 0, // Handle potential parsing issues
+                    duration = currentState.duration.toIntOrNull() ?: 0, // Handle potential parsing issues
+                    answerImage = answerImagePath,
+                    questionAudio = audioPaths.questionPath,
+                    answerAudio = audioPaths.answerPath,
+                    questionVideo = null,
+                    answerVideo = null
+                )
+                if (questionModel == null) {
+                    repository.addQuestion(quizId, model)
+                } else {
+                    repository.updateQuestion(quizId, model)
+                }
+                /*if (currentState.isUpdatingQuestion) {
                     var model = questionModel?.copy(
                         text = currentState.questionText.trim(),
                         options = currentState.answers,
@@ -129,14 +134,18 @@ class CreateQuestionWithOptionsViewModel(
                         voiceover = null,
                         points = currentState.points.toIntOrNull() ?: 0, // Handle potential parsing issues
                         duration = currentState.duration.toIntOrNull() ?: 0, // Handle potential parsing issues
-                        answerImage = answerImagePath
+                        answerImage = answerImagePath,
+                        questionAudio = audioPaths.questionPath,
+                        answerAudio = audioPaths.answerPath,
+                        questionVideo = null,
+                        answerVideo = null
                     )
                     val job = launch(Dispatchers.IO) {
                         repository.addQuestion(quizId!!, model)
                     }
                     job.join()
                     onDone()
-                }
+                }*/
             }
         }
     }
@@ -144,7 +153,7 @@ class CreateQuestionWithOptionsViewModel(
     fun onAnswerChecked(index: Int) {
         val currentState = state.value
         if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
-            state.value = currentState.copy(rightAnswerIndex = index)
+            _state.value = currentState.copy(rightAnswerIndex = index)
         }
     }
 
@@ -153,21 +162,7 @@ class CreateQuestionWithOptionsViewModel(
         if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
             val oldList = currentState.answers.toMutableList()
             oldList[index] = text
-            state.value = currentState.copy(answers = oldList)
-        }
-    }
-
-    fun onQuestionImageSelected(uri: Uri) {
-        val currentState = state.value
-        if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
-            state.value = currentState.copy(questionImage = uri)
-        }
-    }
-
-    fun onAnswerImageSelected(uri: Uri) {
-        val currentState = state.value
-        if (currentState is QuestionUiState.QuestionWithOptionsUiState) {
-            state.value = currentState.copy(answerImage = uri)
+            _state.value = currentState.copy(answers = oldList)
         }
     }
 }
